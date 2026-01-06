@@ -1,0 +1,17 @@
+{
+  "gitUrl": "https://github.com/spring-projects/spring-petclinic.git",
+  "branch": "main",
+  "buildTool": "maven",
+  "dockerImageName": "petclinic-app",
+  "dockerImageTag": "v2.0.0",
+  "dockerRegistry": "docker.io/myusername",
+  "sonarQubeUrl": "http://localhost:9000",
+  "sonarQubeToken": "sqp_your_token_here",
+  "sonarProjectKey": "petclinic-project",
+  "deploymentPort": "8082",
+  "triggeredBy": "admin",
+  "environmentVariables": {
+    "JAVA_OPTS": "-Xmx512m",
+    "SPRING_PROFILES_ACTIVE": "production"
+  }
+}

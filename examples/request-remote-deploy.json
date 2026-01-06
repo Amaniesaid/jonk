@@ -1,0 +1,11 @@
+{
+  "gitUrl": "https://github.com/your-org/production-app.git",
+  "branch": "production",
+  "dockerImageName": "production-app",
+  "dockerImageTag": "release-v3.0.0",
+  "deploymentHost": "192.168.1.100",
+  "deploymentUser": "deploy",
+  "deploymentPort": "8080",
+  "sshKeyPath": "/home/user/.ssh/id_rsa_deploy",
+  "triggeredBy": "ops-team"
+}
