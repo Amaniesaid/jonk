@@ -58,7 +58,7 @@ public class GitCloneStep extends AbstractPipelineStep {
             if (!hashResult.getLogs().isEmpty()) {
                 String commitHash = hashResult.getLogs().get(hashResult.getLogs().size() - 1).trim();
                 context.setCommitHash(commitHash);
-                result.addLog("📌 Commit hash: " + commitHash);
+                result.addLog(" Commit hash: " + commitHash);
             }
         }
 

@@ -62,9 +62,9 @@ public class DockerDeployStep extends AbstractPipelineStep {
         StepResult result = executeCommands(commands, null, null);
 
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog("🚀 Application déployée localement");
-            result.addLog("📍 Container: " + containerName);
-            result.addLog("🌐 Port: " + context.getDeploymentPort());
+            result.addLog(" Application déployée localement");
+            result.addLog(" Container: " + containerName);
+            result.addLog(" Port: " + context.getDeploymentPort());
         }
 
         return result;
@@ -141,9 +141,9 @@ public class DockerDeployStep extends AbstractPipelineStep {
         StepResult result = executeCommands(commands, null, null);
 
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog("🚀 Application déployée sur " + context.getDeploymentHost());
-            result.addLog("📍 Container: " + containerName);
-            result.addLog("🌐 Port: " + context.getDeploymentPort());
+            result.addLog(" Application déployée sur " + context.getDeploymentHost());
+            result.addLog(" Container: " + containerName);
+            result.addLog(" Port: " + context.getDeploymentPort());
         }
 
         return result;

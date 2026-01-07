@@ -33,8 +33,8 @@ public class DockerScanStep extends AbstractPipelineStep {
                     .startTime(java.time.LocalDateTime.now())
                     .endTime(java.time.LocalDateTime.now())
                     .build();
-            result.addLog("⚠ Trivy non installé - scan de sécurité ignoré");
-            result.addLog("💡 Pour installer Trivy: brew install trivy (macOS) ou voir https://aquasecurity.github.io/trivy/");
+            result.addLog(" Trivy non installé - scan de sécurité ignoré");
+            result.addLog(" Pour installer Trivy: brew install trivy (macOS) ou voir https://aquasecurity.github.io/trivy/");
             return result;
         }
 
@@ -49,7 +49,7 @@ public class DockerScanStep extends AbstractPipelineStep {
         StepResult result = executeCommand(command, null);
 
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog("🔒 Scan de sécurité terminé");
+            result.addLog(" Scan de sécurité terminé");
         }
 
         return result;

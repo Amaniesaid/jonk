@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service principal gérant la logique métier du pipeline CI/CD
@@ -39,10 +40,10 @@ public class PipelineService {
     /**
      * Lance un pipeline de manière asynchrone
      * @param context Contexte du pipeline
-     * @return ID de l'exécution
+     * @return un Future complété avec l'ID de l'exécution
      */
     @Async("pipelineExecutor")
-    public String runPipelineAsync(PipelineContext context) {
+    public CompletableFuture<String> runPipelineAsync(PipelineContext context) {
         // Générer un ID unique pour cette exécution
         String executionId = UUID.randomUUID().toString();
         context.setExecutionId(executionId);
@@ -73,7 +74,7 @@ public class PipelineService {
             execution.setEndTime(LocalDateTime.now());
             execution.calculateDuration();
             executionRepository.save(execution);
-            return executionId;
+            return CompletableFuture.completedFuture(executionId);
         }
 
         // Construire la liste des étapes à exécuter
@@ -104,7 +105,7 @@ public class PipelineService {
             executionRepository.save(execution);
         }
 
-        return executionId;
+        return CompletableFuture.completedFuture(executionId);
     }
 
     /**

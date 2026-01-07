@@ -40,7 +40,7 @@ public class DockerBuildStep extends AbstractPipelineStep {
         StepResult result = executeCommand(command, context.getWorkspaceDir());
 
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog("🐳 Image Docker créée: " + fullImageName);
+            result.addLog(" Image Docker créée: " + fullImageName);
         }
 
         return result;

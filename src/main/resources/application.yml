@@ -8,7 +8,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/jonk-cicd
+      uri: mongodb://admin:admin123@localhost:27017/jonk-cicddb?authSource=admin
       database: jonk-cicd
       auto-index-creation: true
 
@@ -16,8 +16,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/jonk
-          jwk-set-uri: http://localhost:8180/realms/jonk/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8180/realms/Jonk
+          jwk-set-uri: http://localhost:8180/realms/Jonk/protocol/openid-connect/certs
   # ============================================
   # Thread Pool Configuration
   # ============================================

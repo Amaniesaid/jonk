@@ -38,7 +38,7 @@ public class HealthCheckStep extends AbstractPipelineStep {
         Integer port = portStr != null ? Integer.parseInt(portStr) : 8080;
 
         String healthUrl = String.format("http://%s:%d/actuator/health", host, port);
-        result.addLog("🏥 Vérification de la santé de l'application: " + healthUrl);
+        result.addLog(" Vérification de la santé de l'application: " + healthUrl);
 
         boolean isHealthy = false;
 
