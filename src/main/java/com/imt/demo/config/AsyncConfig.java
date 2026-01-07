@@ -39,7 +39,7 @@ public class AsyncConfig {
 
         // Politique de rejet : log et rejette la tâche
         executor.setRejectedExecutionHandler((r, exec) -> {
-            log.error("❌ Rejet de l'exécution du pipeline : file d'attente pleine");
+            log.error(" Rejet de l'exécution du pipeline : file d'attente pleine");
             throw new RuntimeException("Trop de pipelines en cours d'exécution. Veuillez réessayer plus tard.");
         });
 

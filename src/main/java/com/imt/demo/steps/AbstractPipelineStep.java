@@ -30,7 +30,7 @@ public abstract class AbstractPipelineStep implements PipelineStep {
 
         try {
             log.info("Exécution de la commande: {}", String.join(" ", command));
-            result.addLog("▶ Commande: " + String.join(" ", command));
+            result.addLog(" Commande: " + String.join(" ", command));
 
             ProcessBuilder processBuilder = new ProcessBuilder(command);
 

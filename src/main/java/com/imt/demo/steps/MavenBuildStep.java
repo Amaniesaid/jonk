@@ -32,7 +32,7 @@ public class MavenBuildStep extends AbstractPipelineStep {
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
             String artifactPath = context.getWorkspaceDir() + "/target/*.jar";
             context.setArtifactPath(artifactPath);
-            result.addLog("📦 Artifact généré: " + artifactPath);
+            result.addLog(" Artifact généré: " + artifactPath);
         }
 
         return result;

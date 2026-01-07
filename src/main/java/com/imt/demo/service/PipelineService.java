@@ -48,7 +48,7 @@ public class PipelineService {
         context.setExecutionId(executionId);
         context.setPipelineId(executionId);
 
-        log.info("🚀 Démarrage asynchrone du pipeline: {}", executionId);
+        log.info(" Démarrage asynchrone du pipeline: {}", executionId);
 
         // Créer l'exécution initiale dans la base de données
         PipelineExecution execution = PipelineExecution.builder()
@@ -67,7 +67,7 @@ public class PipelineService {
         try {
             pipelineEngine.validateContext(context);
         } catch (IllegalArgumentException e) {
-            log.error("❌ Validation du contexte échouée: {}", e.getMessage());
+            log.error(" Validation du contexte échouée: {}", e.getMessage());
             execution.setStatus(PipelineStatus.FAILED);
             execution.setErrorMessage("Validation échouée: " + e.getMessage());
             execution.setEndTime(LocalDateTime.now());
@@ -93,10 +93,10 @@ public class PipelineService {
 
             executionRepository.save(execution);
 
-            log.info("✅ Pipeline terminé: {} - Statut: {}", executionId, execution.getStatus());
+            log.info(" Pipeline terminé: {} - Statut: {}", executionId, execution.getStatus());
 
         } catch (Exception e) {
-            log.error("💥 Erreur lors de l'exécution du pipeline: {}", executionId, e);
+            log.error(" Erreur lors de l'exécution du pipeline: {}", executionId, e);
             execution.setStatus(PipelineStatus.FAILED);
             execution.setErrorMessage("Exception: " + e.getMessage());
             execution.setEndTime(LocalDateTime.now());
@@ -163,7 +163,7 @@ public class PipelineService {
             steps.add(healthCheckStep);
         }
 
-        log.info("📋 Pipeline configuré avec {} étapes", steps.size());
+        log.info(" Pipeline configuré avec {} étapes", steps.size());
         return steps;
     }
 
@@ -200,24 +200,24 @@ public class PipelineService {
 
         List<String> allLogs = new ArrayList<>();
         allLogs.add("═══════════════════════════════════════════════════════════");
-        allLogs.add("📋 LOGS DU PIPELINE: " + executionId);
+        allLogs.add(" LOGS DU PIPELINE: " + executionId);
         allLogs.add("═══════════════════════════════════════════════════════════");
         allLogs.add("");
 
         PipelineExecution exec = execution.get();
-        allLogs.add("🔗 Repository: " + exec.getGitRepoUrl());
-        allLogs.add("🌿 Branche: " + exec.getGitBranch());
-        allLogs.add("📦 Commit: " + (exec.getCommitHash() != null ? exec.getCommitHash() : "N/A"));
-        allLogs.add("👤 Déclenché par: " + exec.getTriggeredBy());
-        allLogs.add("📊 Statut: " + exec.getStatus());
-        allLogs.add("⏱️  Durée: " + (exec.getDurationMs() != null ? exec.getDurationMs() + "ms" : "N/A"));
+        allLogs.add(" Repository: " + exec.getGitRepoUrl());
+        allLogs.add(" Branche: " + exec.getGitBranch());
+        allLogs.add(" Commit: " + (exec.getCommitHash() != null ? exec.getCommitHash() : "N/A"));
+        allLogs.add(" Déclenché par: " + exec.getTriggeredBy());
+        allLogs.add(" Statut: " + exec.getStatus());
+        allLogs.add(" Durée: " + (exec.getDurationMs() != null ? exec.getDurationMs() + "ms" : "N/A"));
         allLogs.add("");
 
         // Logs de chaque étape
         if (exec.getSteps() != null) {
             for (StepResult step : exec.getSteps()) {
                 allLogs.add("───────────────────────────────────────────────────────────");
-                allLogs.add("📌 ÉTAPE: " + step.getStepName());
+                allLogs.add("   ÉTAPE: " + step.getStepName());
                 allLogs.add("   Statut: " + step.getStatus());
                 allLogs.add("   Durée: " + (step.getDurationMs() != null ? step.getDurationMs() + "ms" : "N/A"));
                 allLogs.add("───────────────────────────────────────────────────────────");
@@ -227,7 +227,7 @@ public class PipelineService {
                 }
 
                 if (step.getErrorMessage() != null) {
-                    allLogs.add("❌ ERREUR: " + step.getErrorMessage());
+                    allLogs.add(" ERREUR: " + step.getErrorMessage());
                 }
 
                 allLogs.add("");
@@ -258,7 +258,7 @@ public class PipelineService {
             exec.setEndTime(LocalDateTime.now());
             exec.calculateDuration();
             executionRepository.save(exec);
-            log.warn("⚠️  Pipeline annulé: {}", executionId);
+            log.warn("  Pipeline annulé: {}", executionId);
             return true;
         }
 

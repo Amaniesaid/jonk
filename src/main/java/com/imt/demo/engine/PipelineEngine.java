@@ -38,16 +38,16 @@ public class PipelineEngine {
                 .build();
 
         log.info("═══════════════════════════════════════════════════════════");
-        log.info("🚀 Démarrage du pipeline: {}", execution.getId());
-        log.info("📁 Repository: {}", context.getGitUrl());
-        log.info("🔀 Branche: {}", context.getBranch());
+        log.info(" Démarrage du pipeline: {}", execution.getId());
+        log.info(" Repository: {}", context.getGitUrl());
+        log.info(" Branche: {}", context.getBranch());
         log.info("═══════════════════════════════════════════════════════════");
 
         // Préparer le workspace
         try {
             prepareWorkspace(context);
         } catch (Exception e) {
-            log.error("❌ Erreur lors de la préparation du workspace", e);
+            log.error(" Erreur lors de la préparation du workspace", e);
             execution.setStatus(PipelineStatus.FAILED);
             execution.setErrorMessage("Échec de la préparation du workspace: " + e.getMessage());
             execution.setEndTime(LocalDateTime.now());
@@ -63,7 +63,7 @@ public class PipelineEngine {
         // Exécuter chaque étape séquentiellement
         for (PipelineStep step : steps) {
             log.info("───────────────────────────────────────────────────────────");
-            log.info("▶️  Exécution de l'étape: {}", step.getName());
+            log.info("  Exécution de l'étape: {}", step.getName());
             log.info("───────────────────────────────────────────────────────────");
 
             StepResult stepResult;
@@ -73,11 +73,11 @@ public class PipelineEngine {
                 execution.addStepResult(stepResult);
 
                 if (stepResult.getStatus() == StepStatus.SUCCESS) {
-                    log.info("✅ Étape '{}' terminée avec succès en {}ms",
+                    log.info(" Étape '{}' terminée avec succès en {}ms",
                             step.getName(), stepResult.getDurationMs());
                     executedSteps.add(step);
                 } else {
-                    log.error("❌ Étape '{}' échouée: {}",
+                    log.error(" Étape '{}' échouée: {}",
                             step.getName(), stepResult.getErrorMessage());
                     pipelineSuccess = false;
                     failedStepName = step.getName();
@@ -85,7 +85,7 @@ public class PipelineEngine {
                 }
 
             } catch (Exception e) {
-                log.error("💥 Exception non gérée dans l'étape '{}'", step.getName(), e);
+                log.error(" Exception non gérée dans l'étape '{}'", step.getName(), e);
 
                 // Créer un résultat d'erreur
                 stepResult = StepResult.builder()
@@ -111,19 +111,19 @@ public class PipelineEngine {
         if (pipelineSuccess) {
             execution.setStatus(PipelineStatus.SUCCESS);
             log.info("═══════════════════════════════════════════════════════════");
-            log.info("🎉 Pipeline terminé avec SUCCÈS en {}ms", execution.getDurationMs());
+            log.info(" Pipeline terminé avec SUCCÈS en {}ms", execution.getDurationMs());
             log.info("═══════════════════════════════════════════════════════════");
         } else {
             execution.setStatus(PipelineStatus.FAILED);
             execution.setErrorMessage("Échec à l'étape: " + failedStepName);
 
             log.error("═══════════════════════════════════════════════════════════");
-            log.error("💔 Pipeline ÉCHOUÉ à l'étape: {}", failedStepName);
+            log.error(" Pipeline ÉCHOUÉ à l'étape: {}", failedStepName);
             log.error("═══════════════════════════════════════════════════════════");
 
             // Exécuter le rollback si nécessaire
             if (!executedSteps.isEmpty()) {
-                log.warn("🔄 Démarrage du rollback...");
+                log.warn(" Démarrage du rollback...");
                 performRollback(context, executedSteps, execution);
             }
         }
@@ -158,7 +158,7 @@ public class PipelineEngine {
     private void performRollback(PipelineContext context, List<PipelineStep> executedSteps,
                                   PipelineExecution execution) {
         log.warn("═══════════════════════════════════════════════════════════");
-        log.warn("🔄 ROLLBACK EN COURS");
+        log.warn(" ROLLBACK EN COURS");
         log.warn("═══════════════════════════════════════════════════════════");
 
         // Exécuter le rollback dans l'ordre inverse
@@ -168,18 +168,18 @@ public class PipelineEngine {
             // Ne faire le rollback que pour les étapes critiques
             if (step.isCritical()) {
                 try {
-                    log.info("↩️  Rollback de l'étape: {}", step.getName());
+                    log.info("  Rollback de l'étape: {}", step.getName());
                     step.rollback(context);
-                    log.info("✅ Rollback de '{}' réussi", step.getName());
+                    log.info(" Rollback de '{}' réussi", step.getName());
                 } catch (Exception e) {
-                    log.error("❌ Erreur lors du rollback de '{}': {}", step.getName(), e.getMessage(), e);
+                    log.error(" Erreur lors du rollback de '{}': {}", step.getName(), e.getMessage(), e);
                     // Continuer le rollback même en cas d'erreur
                 }
             }
         }
 
         log.warn("═══════════════════════════════════════════════════════════");
-        log.warn("🔄 ROLLBACK TERMINÉ");
+        log.warn(" ROLLBACK TERMINÉ");
         log.warn("═══════════════════════════════════════════════════════════");
     }
 
@@ -191,12 +191,12 @@ public class PipelineEngine {
             try {
                 Path workspacePath = Path.of(context.getWorkspaceDirectory());
                 if (Files.exists(workspacePath)) {
-                    log.info("🧹 Nettoyage du workspace...");
+                    log.info(" Nettoyage du workspace...");
                     deleteDirectory(workspacePath.toFile());
-                    log.info("✅ Workspace nettoyé");
+                    log.info(" Workspace nettoyé");
                 }
             } catch (Exception e) {
-                log.warn("⚠️  Impossible de nettoyer le workspace: {}", e.getMessage());
+                log.warn("  Impossible de nettoyer le workspace: {}", e.getMessage());
             }
         }
     }

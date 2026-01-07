@@ -37,7 +37,7 @@ public class PipelineController {
     @PostMapping("/run")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public ResponseEntity<Map<String, String>> runPipeline(@RequestBody PipelineRequest request) {
-        log.info("📥 Requête de déclenchement de pipeline reçue");
+        log.info(" Requête de déclenchement de pipeline reçue");
         log.info("   Git URL: {}", request.getGitUrl());
         log.info("   Branche: {}", request.getBranch());
 
@@ -63,7 +63,7 @@ public class PipelineController {
             // Lancer le pipeline de manière asynchrone
             String executionId = pipelineService.runPipelineAsync(context);
 
-            log.info("✅ Pipeline lancé avec succès: {}", executionId);
+            log.info(" Pipeline lancé avec succès: {}", executionId);
 
             Map<String, String> response = new HashMap<>();
             response.put("executionId", executionId);
@@ -73,7 +73,7 @@ public class PipelineController {
             return ResponseEntity.accepted().body(response);
 
         } catch (Exception e) {
-            log.error("❌ Erreur lors du lancement du pipeline", e);
+            log.error(" Erreur lors du lancement du pipeline", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Erreur lors du lancement: " + e.getMessage()));
         }
@@ -86,7 +86,7 @@ public class PipelineController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<?> getPipeline(@PathVariable String id) {
-        log.info("📊 Récupération du pipeline: {}", id);
+        log.info(" Récupération du pipeline: {}", id);
 
         Optional<PipelineExecution> execution = pipelineService.getExecution(id);
 
@@ -105,7 +105,7 @@ public class PipelineController {
     @GetMapping("/{id}/logs")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<?> getPipelineLogs(@PathVariable String id) {
-        log.info("📜 Récupération des logs du pipeline: {}", id);
+        log.info(" Récupération des logs du pipeline: {}", id);
 
         Optional<PipelineExecution> execution = pipelineService.getExecution(id);
 
@@ -128,7 +128,7 @@ public class PipelineController {
     @GetMapping("/executions")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<List<PipelineResponse>> getRecentExecutions() {
-        log.info("📋 Récupération des exécutions récentes");
+        log.info(" Récupération des exécutions récentes");
 
         List<PipelineExecution> executions = pipelineService.getRecentExecutions();
         List<PipelineResponse> responses = executions.stream()
@@ -145,7 +145,7 @@ public class PipelineController {
     @GetMapping("/executions/status/{status}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<List<PipelineResponse>> getExecutionsByStatus(@PathVariable String status) {
-        log.info("📋 Récupération des exécutions avec statut: {}", status);
+        log.info(" Récupération des exécutions avec statut: {}", status);
 
         try {
             PipelineStatus pipelineStatus = PipelineStatus.valueOf(status.toUpperCase());
@@ -167,7 +167,7 @@ public class PipelineController {
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public ResponseEntity<?> cancelPipeline(@PathVariable String id) {
-        log.info("⚠️  Demande d'annulation du pipeline: {}", id);
+        log.info("  Demande d'annulation du pipeline: {}", id);
 
         boolean cancelled = pipelineService.cancelExecution(id);
 

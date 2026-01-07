@@ -43,6 +43,7 @@ public class SecurityConfig {
                         // Endpoints publics
                         .requestMatchers("/api/pipeline/health").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/", "/error", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs.yaml","/v3/api-docs.yml", "/v3/api-docs/**","/api-docs/**").permitAll()
 
                         // Endpoints protégés - nécessite authentification
                         .requestMatchers("/api/pipeline/**").authenticated()

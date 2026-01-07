@@ -1,0 +1,76 @@
+# ============================================
+# JONK CI/CD ENGINE - Configuration
+# ============================================
+
+spring:
+  application:
+    name: jonk-back
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/jonk-cicd
+      database: jonk-cicd
+      auto-index-creation: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/jonk
+          jwk-set-uri: http://localhost:8180/realms/jonk/protocol/openid-connect/certs
+  # ============================================
+  # Thread Pool Configuration
+  # ============================================
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 5
+        queue-capacity: 50
+      thread-name-prefix: pipeline-
+
+  # ============================================
+  # Jackson (JSON Serialization)
+  # ============================================
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+server:
+  port: 8080
+
+# ============================================
+# OAuth2 Resource Server (Keycloak)
+# ============================================
+# Décommenter et configurer pour activer OAuth2
+# spring:
+#   security:
+#     oauth2:
+#       resourceserver:
+#         jwt:
+#           issuer-uri: http://localhost:8180/realms/jonk
+#           jwk-set-uri: http://localhost:8180/realms/jonk/protocol/openid-connect/certs
+
+# ============================================
+# Logging Configuration
+# ============================================
+logging:
+  level:
+    root: INFO
+    com.imt.demo: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ============================================
+# Actuator (Monitoring)
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
