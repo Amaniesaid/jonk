@@ -72,18 +72,35 @@ public class SecurityConfig {
 
             // Extraire les rôles depuis Keycloak (realm_access.roles)
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-            Collection<GrantedAuthority> keycloakRoles = List.of();
+            Collection<GrantedAuthority> keycloakRealmRoles = List.of();
 
             if (realmAccess != null && realmAccess.containsKey("roles")) {
                 @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) realmAccess.get("roles");
-                keycloakRoles = roles.stream()
+                keycloakRealmRoles = roles.stream()
                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
                         .collect(Collectors.toList());
             }
 
-            // Combiner les autorités
-            return Stream.concat(authorities.stream(), keycloakRoles.stream())
+            // Extraire les rôles depuis resource_access.jonk-back.roles
+            Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
+            Collection<GrantedAuthority> resourceRoles = List.of();
+
+            if (resourceAccess != null && resourceAccess.containsKey("jonk-back")) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("jonk-back");
+                if (clientAccess != null && clientAccess.containsKey("roles")) {
+                    @SuppressWarnings("unchecked")
+                    List<String> roles = (List<String>) clientAccess.get("roles");
+                    resourceRoles = roles.stream()
+                            .map(SimpleGrantedAuthority::new) // Les rôles sont déjà préfixés avec ROLE_
+                            .collect(Collectors.toList());
+                }
+            }
+
+            // Combiner toutes les autorités
+            return Stream.of(authorities.stream(), keycloakRealmRoles.stream(), resourceRoles.stream())
+                    .flatMap(s -> s)
                     .collect(Collectors.toSet());
         });
 
