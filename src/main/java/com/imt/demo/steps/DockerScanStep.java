@@ -22,10 +22,7 @@ public class DockerScanStep extends AbstractPipelineStep {
         String fullImageName = context.getDockerImageName() + ":" + context.getDockerImageTag();
 
         // Vérifier si Trivy est installé
-        String[] checkTrivy = {"which", "trivy"};
-        StepResult checkResult = executeCommand(checkTrivy, null);
-
-        if (checkResult.getStatus() != com.imt.demo.model.StepStatus.SUCCESS) {
+        if (!isTrivyInstalled()) {
             log.warn("Trivy n'est pas installé, scan de sécurité ignoré");
             StepResult result = StepResult.builder()
                     .stepName(getName())
@@ -33,8 +30,11 @@ public class DockerScanStep extends AbstractPipelineStep {
                     .startTime(java.time.LocalDateTime.now())
                     .endTime(java.time.LocalDateTime.now())
                     .build();
-            result.addLog(" Trivy non installé - scan de sécurité ignoré");
-            result.addLog(" Pour installer Trivy: brew install trivy (macOS) ou voir https://aquasecurity.github.io/trivy/");
+            result.addLog("⚠ Trivy non installé - scan de sécurité ignoré");
+            result.addLog(" Pour installer Trivy:");
+            result.addLog("   - macOS: brew install trivy");
+            result.addLog("   - Linux: voir https://aquasecurity.github.io/trivy/");
+            result.calculateDuration();
             return result;
         }
 
@@ -59,6 +59,23 @@ public class DockerScanStep extends AbstractPipelineStep {
     public boolean isCritical() {
         // Le scan de sécurité n'est pas critique pour la démo
         return false;
+    }
+
+    /**
+     * Vérifie si Trivy est installé sur le système
+     * 
+     * @return true si Trivy est installé, false sinon
+     */
+    private boolean isTrivyInstalled() {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("which", "trivy");
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+            return exitCode == 0;
+        } catch (Exception e) {
+            log.debug("Erreur lors de la vérification de Trivy: {}", e.getMessage());
+            return false;
+        }
     }
 }
 

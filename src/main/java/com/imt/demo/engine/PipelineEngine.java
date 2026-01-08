@@ -76,6 +76,9 @@ public class PipelineEngine {
                     log.info(" Étape '{}' terminée avec succès en {}ms",
                             step.getName(), stepResult.getDurationMs());
                     executedSteps.add(step);
+                } else if (stepResult.getStatus() == StepStatus.SKIPPED) {
+                    log.warn("⚠ Étape '{}' ignorée (SKIPPED)", step.getName());
+                    // Continuer le pipeline même si l'étape est ignorée
                 } else {
                     log.error(" Étape '{}' échouée: {}",
                             step.getName(), stepResult.getErrorMessage());
