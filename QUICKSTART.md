@@ -46,6 +46,20 @@ brew services start mongodb-community
 sudo systemctl start mongod
 ```
 
+### 1bis. (DEV) Démarrer SonarQube + PostgreSQL
+
+L'étape SonarQube est exécutée via **SonarScanner CLI** (process externe) et le pipeline échoue automatiquement si le **Quality Gate** est KO.
+
+```bash
+docker compose -f docker-dev-env/docker-compose-sonarqube.yml up -d
+```
+
+Ensuite :
+
+- Ouvrir SonarQube sur http://localhost:9000
+- Créer un token (UI) puis le renseigner dans `src/main/resources/application-dev.yml`.
+- Vérifier que `sonar-scanner` est disponible sur la machine / l'image CI.
+
 ### 2. Cloner et compiler le projet
 
 ```bash
@@ -64,6 +78,9 @@ mvn clean install -DskipTests
 ```bash
 # Démarrer JONK
 mvn spring-boot:run
+
+# (DEV) avec le profil dev (pour charger application-dev.yml)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 
 # Ou en utilisant le JAR
 java -jar target/demo-0.0.1-SNAPSHOT.jar
@@ -106,6 +123,24 @@ curl -X POST http://localhost:8080/api/pipeline/run \
     "branch": "main",
     "dockerImageName": "petclinic-test",
     "dockerImageTag": "v1.0.0",
+    "deploymentPort": "8081",
+    "triggeredBy": "test-user"
+  }'
+```
+
+### Test 2bis : Lancer un pipeline avec SonarQube
+
+`sonarEnabled` active/désactive l'étape. Aucune configuration n'est demandée au client final pour `sonar.host.url` / `sonar.projectKey`.
+
+```bash
+curl -X POST http://localhost:8080/api/pipeline/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gitUrl": "https://github.com/spring-projects/spring-petclinic.git",
+    "branch": "main",
+    "dockerImageName": "petclinic-test",
+    "dockerImageTag": "v1.0.0",
+    "sonarEnabled": true,
     "deploymentPort": "8081",
     "triggeredBy": "test-user"
   }'

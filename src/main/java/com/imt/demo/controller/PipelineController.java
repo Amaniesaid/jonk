@@ -209,6 +209,7 @@ public class PipelineController {
                 .sonarQubeUrl(request.getSonarQubeUrl())
                 .sonarQubeToken(request.getSonarQubeToken())
                 .sonarProjectKey(request.getSonarProjectKey())
+                .sonarEnabled(Boolean.TRUE.equals(request.getSonarEnabled()))
                 .deploymentHost(request.getDeploymentHost())
                 .deploymentUser(request.getDeploymentUser())
                 .deploymentPort(request.getDeploymentPort())

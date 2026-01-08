@@ -5,6 +5,8 @@
 spring:
   application:
     name: jonk-back
+  profile:
+    active: dev
 
   data:
     mongodb:
@@ -40,17 +42,6 @@ spring:
 server:
   port: 8080
 
-# ============================================
-# OAuth2 Resource Server (Keycloak)
-# ============================================
-# Décommenter et configurer pour activer OAuth2
-# spring:
-#   security:
-#     oauth2:
-#       resourceserver:
-#         jwt:
-#           issuer-uri: http://localhost:8180/realms/jonk
-#           jwk-set-uri: http://localhost:8180/realms/jonk/protocol/openid-connect/certs
 
 # ============================================
 # Logging Configuration

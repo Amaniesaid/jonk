@@ -5,9 +5,7 @@
   "dockerImageName": "petclinic-app",
   "dockerImageTag": "v2.0.0",
   "dockerRegistry": "docker.io/myusername",
-  "sonarQubeUrl": "http://localhost:9000",
-  "sonarQubeToken": "sqp_your_token_here",
-  "sonarProjectKey": "petclinic-project",
+  "sonarEnabled": true,
   "deploymentPort": "8082",
   "triggeredBy": "admin",
   "environmentVariables": {

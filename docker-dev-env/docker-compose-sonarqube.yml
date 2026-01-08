@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  sonar-db:
+    image: postgres:15
+    container_name: sonar-postgres
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonar_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  sonarqube:
+    image: sonarqube:9.9-community
+    container_name: sonarqube
+    depends_on:
+      - sonar-db
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    restart: unless-stopped
+
+  sonarscanner:
+    image: sonarsource/sonar-scanner-cli
+    container_name: sonarscanner
+    platform: linux/arm64 # Ajoute cette ligne si tu utilises une architecture ARM64 (comme les Mac M1/M2)
+    environment:
+      - SONAR_HOST_URL=http://sonarqube:9000  # URL de ton serveur SonarQube
+      - SONAR_LOGIN=${SONAR_TOKEN}  # Le token d'authentification SonarQube
+    volumes:
+      - ./path_to_your_project:/usr/src  # Remplace par le chemin de ton projet local
+    working_dir: /usr/src  # Assure-toi que ton projet est monté correctement dans ce répertoire
+    entrypoint: ["sonar-scanner", "-Dsonar.projectKey=my-project", "-Dsonar.sources=."]  # Change le projectKey
+    depends_on:
+      - sonarqube
+    restart: "no"  # Ne pas redémarrer automatiquement le scanner
+
+volumes:
+  sonar_db_data:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:

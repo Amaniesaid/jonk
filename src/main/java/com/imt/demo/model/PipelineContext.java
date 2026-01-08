@@ -43,6 +43,9 @@ public class PipelineContext {
     private String sonarQubeToken;
     private String sonarProjectKey;
 
+    // === Activation/désactivation des étapes ===
+    private Boolean sonarEnabled;
+
     // === Configuration Déploiement ===
     private String deploymentHost;
     private String deploymentUser;
@@ -80,6 +83,14 @@ public class PipelineContext {
 
     public String getWorkspaceDir() {
         return workspaceDirectory;
+    }
+
+    /**
+     * Accès explicite au workspace sous forme de File.
+     * (Le getter getWorkspaceDir() est un alias historique retournant un String.)
+     */
+    public File getWorkspaceDirFile() {
+        return workspaceDir;
     }
 
     public String getSonarUrl() {

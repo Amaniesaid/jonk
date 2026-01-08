@@ -146,7 +146,7 @@ public class PipelineService {
         steps.add(mavenTestStep);
 
         // 4. Analyse SonarQube (optionnelle)
-        if (context.getSonarQubeUrl() != null) {
+        if (Boolean.TRUE.equals(context.getSonarEnabled())) {
             steps.add(sonarQubeStep);
         }
 

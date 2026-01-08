@@ -66,7 +66,7 @@ public class HealthCheckStep extends AbstractPipelineStep {
                 connection.disconnect();
 
             } catch (Exception e) {
-                result.addLog(String.format("⚠ Erreur: %s", e.getMessage()));
+                result.addLog(String.format(" Erreur: %s", e.getMessage()));
             }
 
             if (attempt < MAX_RETRIES) {

@@ -33,6 +33,10 @@ public class PipelineRequest {
     private String sonarQubeToken;
     private String sonarProjectKey;
 
+    // === Activation/désactivation des étapes (optionnel) ===
+    // DEV: permet d'activer SonarQube sans demander sonar.host.url / sonar.projectKey au client.
+    private Boolean sonarEnabled;
+
     // === Configuration Déploiement (optionnel) ===
     private String deploymentHost; // null = déploiement local
     private String deploymentUser;

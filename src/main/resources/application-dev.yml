@@ -1,0 +1,15 @@
+# ============================================
+# DEV profile - SonarQube (temporaire)
+# ============================================
+# Objectif: rendre l'étape SonarQube fonctionnelle en environnement de dev
+# sans demander à l'utilisateur final sonar.host.url / sonar.projectKey.
+#
+# ⚠️ En PROD: remplacer `token` par un Secret Manager / variable d'env.
+
+jonk:
+  sonarqube:
+    host-url: "http://localhost:9000"
+    token: "sqa_78645ae58235a2100213d7c2704f85d0b2ddc057"
+    scanner-command: "sonar-scanner"
+    poll-interval: 2s
+    quality-gate-timeout: 5m
