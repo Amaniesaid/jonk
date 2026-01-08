@@ -1,0 +1,200 @@
+{
+  "realm": "Jonk",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_ADMIN",
+        "description": "Administrateur avec accès complet"
+      },
+      {
+        "name": "ROLE_DEV",
+        "description": "Développeur avec accès aux pipelines"
+      },
+      {
+        "name": "ROLE_VIEWER",
+        "description": "Lecteur avec accès en lecture seule"
+      }
+    ],
+    "client": {
+      "jonk-back": [
+        {
+          "name": "ROLE_ADMIN",
+          "description": "Administrateur"
+        },
+        {
+          "name": "ROLE_DEV",
+          "description": "Développeur"
+        },
+        {
+          "name": "ROLE_VIEWER",
+          "description": "Viewer"
+        }
+      ]
+    }
+  },
+
+  "clients": [
+    {
+      "clientId": "jonk-back",
+      "name": "Jonk Backend API",
+      "description": "Client pour l'API backend Jonk",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "jonk-secret",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "roles",
+        "web-origins"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    }
+  ],
+
+  "users": [
+    {
+      "username": "ousmane",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "ouz@gmail.com",
+      "firstName": "Ousmane",
+      "lastName": "D",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-jonk"
+      ],
+      "clientRoles": {
+        "jonk-back": [
+          "ROLE_ADMIN",
+          "ROLE_DEV"
+        ]
+      }
+    },
+    {
+      "username": "dev",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "dev@jonk.com",
+      "firstName": "Dev",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "devpass",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-jonk"
+      ],
+      "clientRoles": {
+        "jonk-back": [
+          "ROLE_DEV"
+        ]
+      }
+    },
+    {
+      "username": "viewer",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "viewer@jonk.com",
+      "firstName": "Viewer",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "viewerpass",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-jonk"
+      ],
+      "clientRoles": {
+        "jonk-back": [
+          "ROLE_VIEWER"
+        ]
+      }
+    }
+  ],
+
+  "groups": [
+    {
+      "name": "Admins",
+      "path": "/Admins",
+      "clientRoles": {
+        "jonk-back": [
+          "ROLE_ADMIN"
+        ]
+      }
+    },
+    {
+      "name": "Developers",
+      "path": "/Developers",
+      "clientRoles": {
+        "jonk-back": [
+          "ROLE_DEV"
+        ]
+      }
+    },
+    {
+      "name": "Viewers",
+      "path": "/Viewers",
+      "clientRoles": {
+        "jonk-back": [
+          "ROLE_VIEWER"
+        ]
+      }
+    }
+  ],
+
+  "clientScopeMappings": {
+    "jonk-back": [
+      {
+        "client": "jonk-back",
+        "roles": [
+          "ROLE_ADMIN",
+          "ROLE_DEV",
+          "ROLE_VIEWER"
+        ]
+      }
+    ]
+  }
+}
