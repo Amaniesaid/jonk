@@ -17,5 +17,5 @@ jonk:
   keycloak:
     server-url: http://localhost:8180
     realm: Jonk
-    clientId: jonk-back
+    client-id: jonk-back
     client-secret: jonk-secret
