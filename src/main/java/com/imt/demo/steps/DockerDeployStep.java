@@ -55,7 +55,19 @@ public class DockerDeployStep extends AbstractPipelineStep {
             // Supprimer le container
             commands.add(new String[]{"docker", "rm", containerName});
         } else {
-            log.info("Aucun container existant nommé '{}', déploiement d'une nouvelle instance", containerName);
+            log.info("Aucun container existant nommé '{}', vérification du port...", containerName);
+        }
+
+        // Vérifier si le port est déjà utilisé et nettoyer si nécessaire
+        String portInUse = findContainerUsingPort(context.getDeploymentPort());
+        if (portInUse != null && !portInUse.equals(containerName)) {
+            log.info("Port {} déjà utilisé par le container '{}', nettoyage...", context.getDeploymentPort(), portInUse);
+            
+            // Arrêter le container qui utilise le port
+            commands.add(new String[]{"docker", "stop", portInUse});
+            
+            // Supprimer le container
+            commands.add(new String[]{"docker", "rm", portInUse});
         }
 
         // Démarrer le nouveau container
@@ -184,6 +196,37 @@ public class DockerDeployStep extends AbstractPipelineStep {
         } catch (Exception e) {
             log.debug("Erreur lors de la vérification du container: {}", e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Trouve le nom du container qui utilise un port spécifique
+     * 
+     * @param port Le port à vérifier (par exemple "8082")
+     * @return Le nom du container utilisant le port, ou null si aucun
+     */
+    private String findContainerUsingPort(String port) {
+        try {
+            // Commande pour trouver les containers utilisant le port
+            // Format: docker ps --filter "publish=8082" --format "{{.Names}}"
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                "docker", "ps", "--filter", "publish=" + port, "--format", "{{.Names}}"
+            );
+            Process process = processBuilder.start();
+            
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String containerName = reader.readLine();
+                int exitCode = process.waitFor();
+                
+                if (exitCode == 0 && containerName != null && !containerName.trim().isEmpty()) {
+                    return containerName.trim();
+                }
+                return null;
+            }
+        } catch (Exception e) {
+            log.debug("Erreur lors de la recherche du container sur le port {}: {}", port, e.getMessage());
+            return null;
         }
     }
 
