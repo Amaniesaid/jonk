@@ -45,9 +45,18 @@ public class DockerDeployStep extends AbstractPipelineStep {
     private StepResult deployLocal(PipelineContext context, String imageName, String containerName) {
         List<String[]> commands = new ArrayList<>();
 
-        // Arrêter le container existant s'il existe
-        commands.add(new String[]{"sh", "-c", "docker stop " + containerName + " || true"});
-        commands.add(new String[]{"sh", "-c", "docker rm " + containerName + " || true"});
+        // Vérifier et nettoyer le container existant si nécessaire
+        if (containerExists(containerName)) {
+            log.info("Container existant détecté ({}), nettoyage en cours...", containerName);
+            
+            // Arrêter le container existant
+            commands.add(new String[]{"docker", "stop", containerName});
+            
+            // Supprimer le container
+            commands.add(new String[]{"docker", "rm", containerName});
+        } else {
+            log.info("Aucun container existant nommé '{}', déploiement d'une nouvelle instance", containerName);
+        }
 
         // Démarrer le nouveau container
         String[] runCommand = {
@@ -62,9 +71,10 @@ public class DockerDeployStep extends AbstractPipelineStep {
         StepResult result = executeCommands(commands, null, null);
 
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog(" Application déployée localement");
-            result.addLog(" Container: " + containerName);
-            result.addLog(" Port: " + context.getDeploymentPort());
+            result.addLog("✓ Application déployée localement");
+            result.addLog("  Container: " + containerName);
+            result.addLog("  Port: " + context.getDeploymentPort());
+            result.addLog("  Image: " + imageName);
         }
 
         return result;
@@ -141,12 +151,40 @@ public class DockerDeployStep extends AbstractPipelineStep {
         StepResult result = executeCommands(commands, null, null);
 
         if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog(" Application déployée sur " + context.getDeploymentHost());
-            result.addLog(" Container: " + containerName);
-            result.addLog(" Port: " + context.getDeploymentPort());
+            result.addLog("✓ Application déployée sur " + context.getDeploymentHost());
+            result.addLog("  Container: " + containerName);
+            result.addLog("  Port: " + context.getDeploymentPort());
+            result.addLog("  Image: " + imageName);
         }
 
         return result;
+    }
+
+    /**
+     * Vérifie si un container Docker existe (en cours d'exécution ou arrêté)
+     * 
+     * @param containerName Le nom du container à vérifier
+     * @return true si le container existe, false sinon
+     */
+    private boolean containerExists(String containerName) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                "docker", "ps", "-a", "--filter", "name=" + containerName, "--format", "{{.Names}}"
+            );
+            Process process = processBuilder.start();
+            
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String line = reader.readLine();
+                int exitCode = process.waitFor();
+                
+                // Vérifier si le nom exact correspond
+                return exitCode == 0 && line != null && line.trim().equals(containerName);
+            }
+        } catch (Exception e) {
+            log.debug("Erreur lors de la vérification du container: {}", e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -158,9 +196,11 @@ public class DockerDeployStep extends AbstractPipelineStep {
             String previousImage = context.getDockerImageName() + ":" + context.getPreviousDockerImageTag();
             String containerName = context.getContainerName();
 
-            // Arrêter le container actuel
-            executeCommand(new String[]{"docker", "stop", containerName}, null);
-            executeCommand(new String[]{"docker", "rm", containerName}, null);
+            if (containerExists(containerName)) {
+                // Arrêter le container actuel
+                executeCommand(new String[]{"docker", "stop", containerName}, null);
+                executeCommand(new String[]{"docker", "rm", containerName}, null);
+            }
 
             // Redémarrer avec l'ancienne image
             String[] rollbackCommand = {
