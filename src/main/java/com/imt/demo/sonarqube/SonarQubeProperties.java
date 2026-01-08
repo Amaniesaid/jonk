@@ -1,10 +1,14 @@
 package com.imt.demo.sonarqube;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
+@Setter
+@Getter
 @Component
 @ConfigurationProperties(prefix = "jonk.sonarqube")
 public class SonarQubeProperties {
@@ -34,43 +38,4 @@ public class SonarQubeProperties {
      */
     private Duration qualityGateTimeout = Duration.ofMinutes(5);
 
-    public String getHostUrl() {
-        return hostUrl;
-    }
-
-    public void setHostUrl(String hostUrl) {
-        this.hostUrl = hostUrl;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getScannerCommand() {
-        return scannerCommand;
-    }
-
-    public void setScannerCommand(String scannerCommand) {
-        this.scannerCommand = scannerCommand;
-    }
-
-    public Duration getPollInterval() {
-        return pollInterval;
-    }
-
-    public void setPollInterval(Duration pollInterval) {
-        this.pollInterval = pollInterval;
-    }
-
-    public Duration getQualityGateTimeout() {
-        return qualityGateTimeout;
-    }
-
-    public void setQualityGateTimeout(Duration qualityGateTimeout) {
-        this.qualityGateTimeout = qualityGateTimeout;
-    }
 }

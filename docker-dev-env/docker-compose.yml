@@ -1,4 +1,4 @@
-version: "3.9"
+name: jonk
 
 services:
   # PostgreSQL - Base de données pour Keycloak
