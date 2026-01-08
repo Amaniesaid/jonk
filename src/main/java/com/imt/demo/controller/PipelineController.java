@@ -35,7 +35,7 @@ public class PipelineController {
      * POST /api/pipeline/run
      */
     @PostMapping("/run")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public ResponseEntity<Map<String, String>> runPipeline(@RequestBody PipelineRequest request) {
         log.info(" Requête de déclenchement de pipeline reçue");
         log.info("   Git URL: {}", request.getGitUrl());
