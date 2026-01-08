@@ -1,0 +1,26 @@
+package com.imt.demo.config;
+
+import com.imt.demo.keycloak.KeycloakProperties;
+import lombok.RequiredArgsConstructor;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@RequiredArgsConstructor
+public class KeycloakAdminConfig {
+    private final KeycloakProperties properties;
+
+    @Bean
+    public Keycloak keycloak() {
+        return KeycloakBuilder.builder()
+                .serverUrl(properties.getServerUrl())
+                .realm(properties.getRealm()) // The realm where the admin user exists
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+                .clientId(properties.getClientId())
+                .clientSecret(properties.getClientSecret())
+                .build();
+    }
+}

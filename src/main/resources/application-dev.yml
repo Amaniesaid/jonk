@@ -13,3 +13,9 @@ jonk:
     scanner-command: "sonar-scanner"
     poll-interval: 2s
     quality-gate-timeout: 5m
+
+  keycloak:
+    server-url: http://localhost:8180
+    realm: Jonk
+    clientId: jonk-back
+    client-secret: jonk-secret
