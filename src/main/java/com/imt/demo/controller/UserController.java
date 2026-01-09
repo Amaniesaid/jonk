@@ -24,7 +24,7 @@ public class UserController {
     private final KeycloakService keycloakService;
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserDto> getUsers() {
         return keycloakService.getUsers();
     }
