@@ -1,6 +1,30 @@
 name: jonk
 
+x-generic-mongo: &generic-mongodb
+  image: mongo:latest
+  restart: on-failure
+  environment: &mongo-env
+    MONGO_INITDB_ROOT_USERNAME: admin
+    MONGO_INITDB_ROOT_PASSWORD: admin123
+  healthcheck:
+    test: [ "CMD", "mongosh", "--quiet", "127.0.0.1/admin", "--eval", "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'" ]
+    interval: 5s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+
 services:
+  mongo:
+    <<: *generic-mongodb
+    environment:
+      <<: *mongo-env
+      MONGO_INITDB_DATABASE: jonk-cicddb
+    ports:
+      - '27017:27017'
+    container_name: mongo
+    volumes:
+      - mongo-db:/data/db
+
   # PostgreSQL - Base de données pour Keycloak
   postgres:
     image: postgres:16
@@ -74,6 +98,7 @@ services:
 volumes:
   postgres_data:
     driver: local
+  mongo-db:
 
 networks:
   keycloak-network:
