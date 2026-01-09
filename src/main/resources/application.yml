@@ -18,8 +18,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/Jonk
-          jwk-set-uri: http://localhost:8180/realms/Jonk/protocol/openid-connect/certs
+          issuer-uri: http://host.docker.internal:8180/realms/Jonk
+          jwk-set-uri: http://host.docker.internal:8180/realms/Jonk/protocol/openid-connect/certs
   # ============================================
   # Thread Pool Configuration
   # ============================================

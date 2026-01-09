@@ -15,7 +15,7 @@ jonk:
     quality-gate-timeout: 5m
 
   keycloak:
-    server-url: http://localhost:8180
+    server-url: http://host.docker.internal:8180
     realm: Jonk
     client-id: jonk-back
     client-secret: jonk-secret
