@@ -35,4 +35,10 @@ public class UserController {
     public void setAdminStatus(@PathVariable String id, @RequestBody SetAdminRequest setAdminRequest, Principal principal) {
         keycloakService.setAdminStatus(id, setAdminRequest.isAdmin(), principal.getName());
     }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
+    public UserDto getUser(@PathVariable String id) {
+        return keycloakService.getUser(id);
+    }
 }

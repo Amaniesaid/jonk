@@ -3,6 +3,7 @@ package com.imt.demo.keycloak;
 import com.imt.demo.dto.UserDto;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.InternalServerErrorException;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -12,6 +13,7 @@ import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -52,7 +54,7 @@ public class KeycloakService {
         return  users
                 .list()
                 .stream()
-                .map(userRepresentation -> keycloakUserMapper.toUserDto(userRepresentation, users.get(userRepresentation.getId()), findClientUUID()))
+                .map(userRepresentation -> toUserDto(userRepresentation, users.get(userRepresentation.getId())))
                 .toList();
     }
 
@@ -87,5 +89,22 @@ public class KeycloakService {
                 .stream()
                 .filter(role -> role.getName().equals(KeycloakUserMapper.ADMIN))
                 .findFirst();
+    }
+
+    private UserDto toUserDto(UserRepresentation userRepresentation, UserResource userResource) {
+        return keycloakUserMapper.toUserDto(userRepresentation, userResource, findClientUUID());
+    }
+
+    public UserDto getUser(String id) {
+
+        RealmResource realm = getRealm();
+        UsersResource users = realm.users();
+        UserResource userResource = users.get(id);
+
+        if (userResource == null) {
+            throw new NotFoundException("No such user with id " + id);
+        }
+
+        return toUserDto(userResource.toRepresentation(), userResource);
     }
 }
