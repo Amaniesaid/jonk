@@ -22,6 +22,16 @@ services:
     networks:
       - keycloak-network
 
+  # Apache
+  apache:
+    container_name: apache
+    image: bellackn/httpd_oidc
+    ports:
+      - 82:82
+    volumes:
+      - ./apache/config/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./apache/config/conf.d:/usr/local/apache2/conf.d
+
   # Keycloak - Serveur d'authentification
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
