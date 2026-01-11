@@ -37,7 +37,7 @@ public class HealthCheckStep extends AbstractPipelineStep {
                 .build();
 
         String host = context.getDeploymentHost() != null ? context.getDeploymentHost() : "localhost";
-        String portStr = context.getDeploymentPort();
+        String portStr = "8089"; // context.getDeploymentPort();
         Integer port = portStr != null ? Integer.parseInt(portStr) : 8080;
 
         result.addLog(String.format("🔍 Vérification de l'application sur %s:%d", host, port));

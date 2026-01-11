@@ -21,7 +21,7 @@ public class MavenTestStep extends AbstractPipelineStep {
     public StepResult execute(PipelineContext context) throws Exception {
         // Commande Maven: exécution des tests
         String[] command = {
-            "mvn", "test",
+            "mvn.cmd", "test",
             "-B"  // Mode batch (non-interactif)
         };
 

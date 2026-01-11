@@ -25,6 +25,7 @@ public class PipelineRequest {
 
     // === Configuration Docker (obligatoire) ===
     private String dockerImageName;
+    private String dockerPort;
     private String dockerImageTag; // optionnel (généré automatiquement si absent)
     private String dockerRegistry; // optionnel
 

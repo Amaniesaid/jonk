@@ -75,7 +75,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
             "docker", "run",
             "-d",
             "--name", containerName,
-            "-p", context.getDeploymentPort() + ":8080",
+            "-p", "8089:8080",
             imageName
         };
         commands.add(runCommand);
@@ -101,12 +101,13 @@ public class DockerDeployStep extends AbstractPipelineStep {
         List<String[]> commands = new ArrayList<>();
 
         // 1. Exporter l'image Docker vers un fichier tar
-        String imageTarFile = "/tmp/" + context.getPipelineId() + ".tar";
+        String imageTarFile = context.getWorkspaceDir() + context.getPipelineId() + ".tar";
         commands.add(new String[]{"docker", "save", "-o", imageTarFile, imageName});
 
         // 2. Copier l'image vers le serveur distant
         String[] scpCommand = {
             "scp",
+                "-P", context.getDeploymentPort(),
             "-o", "StrictHostKeyChecking=no",
             imageTarFile,
             sshTarget + ":/tmp/"
@@ -115,6 +116,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         if (context.getSshKeyPath() != null) {
             scpCommand = new String[]{
                 "scp",
+                    "-P", context.getDeploymentPort(),
                 "-i", context.getSshKeyPath(),
                 "-o", "StrictHostKeyChecking=no",
                 imageTarFile,
@@ -128,19 +130,20 @@ public class DockerDeployStep extends AbstractPipelineStep {
             "docker load -i /tmp/%s.tar && " +
             "docker stop %s || true && " +
             "docker rm %s || true && " +
-            "docker run -d --name %s -p %d:8080 %s && " +
+            "docker run -d --name %s -p 8089:8080 %s && " +
             "rm /tmp/%s.tar",
             context.getPipelineId(),
             containerName,
             containerName,
             containerName,
-            context.getDeploymentPort(),
+//            context.getDeploymentPort(),
             imageName,
             context.getPipelineId()
         );
 
         String[] sshCommand = {
             "ssh",
+                "-p", context.getDeploymentPort(),
             "-o", "StrictHostKeyChecking=no",
             sshTarget,
             remoteCommands
@@ -149,6 +152,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         if (context.getSshKeyPath() != null) {
             sshCommand = new String[]{
                 "ssh",
+                    "-p", context.getDeploymentPort(),
                 "-i", context.getSshKeyPath(),
                 "-o", "StrictHostKeyChecking=no",
                 sshTarget,
@@ -158,7 +162,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         commands.add(sshCommand);
 
         // 4. Nettoyer le fichier tar local
-        commands.add(new String[]{"rm", imageTarFile});
+//        commands.add(new String[]{"del", imageTarFile});
 
         StepResult result = executeCommands(commands, null, null);
 
@@ -250,7 +254,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
                 "docker", "run",
                 "-d",
                 "--name", containerName,
-                "-p", context.getDeploymentPort() + ":8080",
+                "-p", "8089:8080",
                 previousImage
             };
 

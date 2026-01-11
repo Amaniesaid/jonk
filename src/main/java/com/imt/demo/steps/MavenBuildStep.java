@@ -21,7 +21,7 @@ public class MavenBuildStep extends AbstractPipelineStep {
     public StepResult execute(PipelineContext context) throws Exception {
         // Commande Maven: clean package (sans les tests, qui seront exécutés séparément)
         String[] command = {
-            "mvn", "clean", "package",
+            "mvn.cmd", "clean", "package",
             "-DskipTests",
             "-B"  // Mode batch (non-interactif)
         };
