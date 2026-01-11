@@ -9,8 +9,10 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Machine {
+    @Id
     private UUID id;
     private EnvironmentType environmentType;
     private String name;
-    private int hostPort;
+    private int hostSshPort;
+    private String hostSshUsername;
 }

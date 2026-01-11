@@ -20,5 +20,8 @@ public class MachineDto {
     private String name;
 
     @NotNull
-    private int hostPort;
+    private int hostSshPort;
+
+    @NotNull
+    private String hostSshUsername;
 }

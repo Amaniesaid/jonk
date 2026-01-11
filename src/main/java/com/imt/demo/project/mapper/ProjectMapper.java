@@ -3,10 +3,16 @@ package com.imt.demo.project.mapper;
 import com.imt.demo.project.dto.ProjectDto;
 import com.imt.demo.project.dto.ProjectSnippetDto;
 import com.imt.demo.project.model.Project;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+
 @Component
+@RequiredArgsConstructor
 public class ProjectMapper {
+
+    private final MachineMapper machineMapper;
 
     public Project toEntity(ProjectDto projectDto) {
         if (projectDto == null) {
@@ -16,7 +22,11 @@ public class ProjectMapper {
         project.setId(projectDto.getId());
         project.setName(projectDto.getName());
         project.setGiturl(projectDto.getGiturl());
-        // Note: Machine mapping would be needed here if it's complex
+        if (projectDto.getMachines() != null) {
+            project.setMachines(projectDto.getMachines().stream()
+                    .map(machineMapper::toEntity)
+                    .collect(Collectors.toList()));
+        }
         project.setProjectType(projectDto.getProjectType());
         project.setContainerPort(projectDto.getContainerPort());
         return project;
@@ -30,7 +40,11 @@ public class ProjectMapper {
         projectDto.setId(project.getId());
         projectDto.setName(project.getName());
         projectDto.setGiturl(project.getGiturl());
-        // Note: Machine mapping would be needed here if it's complex
+        if (project.getMachines() != null) {
+            projectDto.setMachines(project.getMachines().stream()
+                    .map(machineMapper::toDto)
+                    .collect(Collectors.toList()));
+        }
         projectDto.setProjectType(project.getProjectType());
         projectDto.setContainerPort(project.getContainerPort());
         return projectDto;
