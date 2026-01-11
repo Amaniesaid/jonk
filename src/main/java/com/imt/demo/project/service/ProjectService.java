@@ -41,7 +41,7 @@ public class ProjectService {
     }
 
     public ResponseEntity<Map<String, String>> runPipeline(String id) {
-        ProjectDto project = projectRepository.findById(id).orElseThrow(() -> 
+        ProjectDto project = projectRepository.findById(id).orElseThrow(() ->
             new NotFoundException("No such project " + id)
         );
 
@@ -75,7 +75,7 @@ public class ProjectService {
     }
 
     public List<PipelineResponse> getPipelineHistory(String id) {
-        ProjectDto project = projectRepository.findById(id).orElseThrow(() -> 
+        ProjectDto project = projectRepository.findById(id).orElseThrow(() ->
             new NotFoundException("No such project " + id)
         );
 
