@@ -6,13 +6,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Document(collection = "projects")
 public class Project {
     @Id
-    private String id;
+    private UUID id;
     private String name;
     private String giturl;
     private ProjectType projectType;

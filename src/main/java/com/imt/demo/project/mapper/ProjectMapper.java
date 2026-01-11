@@ -1,4 +1,48 @@
 package com.imt.demo.project.mapper;
 
+import com.imt.demo.project.dto.ProjectDto;
+import com.imt.demo.project.dto.ProjectSnippetDto;
+import com.imt.demo.project.model.Project;
+import org.springframework.stereotype.Component;
+
+@Component
 public class ProjectMapper {
+
+    public Project toEntity(ProjectDto projectDto) {
+        if (projectDto == null) {
+            return null;
+        }
+        Project project = new Project();
+        project.setId(projectDto.getId());
+        project.setName(projectDto.getName());
+        project.setGiturl(projectDto.getGiturl());
+        // Note: Machine mapping would be needed here if it's complex
+        project.setProjectType(projectDto.getProjectType());
+        project.setContainerPort(projectDto.getContainerPort());
+        return project;
+    }
+
+    public ProjectDto toDto(Project project) {
+        if (project == null) {
+            return null;
+        }
+        ProjectDto projectDto = new ProjectDto();
+        projectDto.setId(project.getId());
+        projectDto.setName(project.getName());
+        projectDto.setGiturl(project.getGiturl());
+        // Note: Machine mapping would be needed here if it's complex
+        projectDto.setProjectType(project.getProjectType());
+        projectDto.setContainerPort(project.getContainerPort());
+        return projectDto;
+    }
+
+    public ProjectSnippetDto toSnippetDto(Project project) {
+        if (project == null) {
+            return null;
+        }
+        ProjectSnippetDto snippetDto = new ProjectSnippetDto();
+        snippetDto.setId(project.getId());
+        snippetDto.setName(project.getName());
+        return snippetDto;
+    }
 }
