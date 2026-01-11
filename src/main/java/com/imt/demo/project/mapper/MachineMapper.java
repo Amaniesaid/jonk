@@ -17,6 +17,7 @@ public class MachineMapper {
         machine.setEnvironmentType(machineDto.getEnvironmentType());
         machine.setHostSshPort(machineDto.getHostSshPort());
         machine.setHostSshUsername(machineDto.getHostSshUsername());
+        machine.setDeploymentPort(machineDto.getDeploymentPort());
         return machine;
     }
 
@@ -30,6 +31,7 @@ public class MachineMapper {
         machineDto.setEnvironmentType(machine.getEnvironmentType());
         machineDto.setHostSshPort(machine.getHostSshPort());
         machineDto.setHostSshUsername(machine.getHostSshUsername());
+        machineDto.setDeploymentPort(machine.getDeploymentPort());
         return machineDto;
     }
 }
