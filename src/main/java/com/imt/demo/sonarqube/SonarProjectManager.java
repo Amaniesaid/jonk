@@ -3,6 +3,7 @@ package com.imt.demo.sonarqube;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
@@ -24,13 +25,11 @@ public class SonarProjectManager {
     }
 
     public String computeProjectKey(File workspaceDir, String gitUrl) {
-        // 1) Prefer Maven coordinates (groupId:artifactId) when pom.xml exists
         Optional<String> fromPom = computeProjectKeyFromPom(workspaceDir.toPath().resolve("pom.xml"));
         if (fromPom.isPresent()) {
             return sanitizeProjectKey(fromPom.get());
         }
 
-        // 2) Fallback to git URL "org:repo"
         if (gitUrl != null && !gitUrl.isBlank()) {
             Optional<String> fromGit = computeProjectKeyFromGitUrl(gitUrl);
             if (fromGit.isPresent()) {
@@ -46,7 +45,7 @@ public class SonarProjectManager {
             return;
         }
 
-        log.info("Création du projet SonarQube '{}' (name='{}')", projectKey, projectName);
+        log.info("Creation du projet SonarQube '{}' (name='{}')", projectKey, projectName);
         apiClient.postForm("/api/projects/create", Map.of(
                 "project", projectKey,
                 "name", projectName
@@ -64,7 +63,7 @@ public class SonarProjectManager {
         }
 
         JsonNode components = json.get("components");
-        return components != null && components.isArray() && components.size() > 0;
+        return components != null && components.isArray() && !components.isEmpty();
     }
 
     private Optional<String> computeProjectKeyFromPom(Path pomPath) {
@@ -87,11 +86,10 @@ public class SonarProjectManager {
             String groupId = textContentOfFirst(doc.getDocumentElement(), "groupId");
 
             if (groupId == null || groupId.isBlank()) {
-                // try parent groupId
                 var parentNodes = doc.getDocumentElement().getElementsByTagName("parent");
                 if (parentNodes.getLength() > 0) {
                     var parent = parentNodes.item(0);
-                    if (parent instanceof org.w3c.dom.Element el) {
+                    if (parent instanceof Element el) {
                         groupId = textContentOfFirst(el, "groupId");
                     }
                 }
@@ -108,7 +106,7 @@ public class SonarProjectManager {
         }
     }
 
-    private String textContentOfFirst(org.w3c.dom.Element element, String tag) {
+    private String textContentOfFirst(Element element, String tag) {
         var nodes = element.getElementsByTagName(tag);
         if (nodes.getLength() == 0) {
             return null;
@@ -121,7 +119,6 @@ public class SonarProjectManager {
             String normalized = gitUrl.trim();
             normalized = normalized.replaceAll("\\.git$", "");
 
-            // support scp-like: git@github.com:org/repo
             if (normalized.contains(":") && normalized.contains("@") && !normalized.startsWith("http")) {
                 int colon = normalized.indexOf(':');
                 String path = normalized.substring(colon + 1);
@@ -159,18 +156,12 @@ public class SonarProjectManager {
         return Optional.of(org + ":" + repo);
     }
 
-    /**
-     * SonarQube project key rules are fairly permissive but we sanitize to be safe.
-     */
     private String sanitizeProjectKey(String raw) {
         String trimmed = raw.trim();
-        // Keep common separators (':' '-' '_' '.') and alphanumerics; replace the rest.
         String sanitized = trimmed.replaceAll("[^a-zA-Z0-9:_\\-\\.]", "_");
-        // Avoid extremely long keys (defensive)
         if (sanitized.length() > 200) {
             sanitized = sanitized.substring(0, 200);
         }
-        // Sonar recommends avoiding upper-case in some contexts; keep but normalize to lower for stability
         return sanitized.toLowerCase(Locale.ROOT);
     }
 }

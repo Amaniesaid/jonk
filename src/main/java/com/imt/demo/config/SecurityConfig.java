@@ -21,37 +21,24 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Configuration de la sécurité de l'application.
- * Supporte OAuth2 avec Keycloak et peut fonctionner en mode "désactivé" pour les tests.
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    /**
-     * Configuration du filtre de sécurité
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable()) // Désactiver CSRF pour API REST
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints publics
                         .requestMatchers("/api/pipeline/health").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/", "/error", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs.yaml","/v3/api-docs.yml", "/v3/api-docs/**","/api-docs/**").permitAll()
-
-                        // Endpoints protégés - nécessite authentification
+                        .requestMatchers("/", "/error", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs.yaml", "/v3/api-docs.yml", "/v3/api-docs/**", "/api-docs/**").permitAll()
                         .requestMatchers("/api/pipeline/**").authenticated()
-
-                        // Tous les autres endpoints nécessitent authentification
                         .anyRequest().authenticated()
                 )
-                // Configuration OAuth2 Resource Server (JWT)
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 );
@@ -59,18 +46,13 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Convertisseur JWT pour extraire les rôles depuis les claims Keycloak
-     */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            // Extraire les rôles depuis les claims standard
             JwtGrantedAuthoritiesConverter defaultConverter = new JwtGrantedAuthoritiesConverter();
             Collection<GrantedAuthority> authorities = defaultConverter.convert(jwt);
 
-            // Extraire les rôles depuis Keycloak (realm_access.roles)
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             Collection<GrantedAuthority> keycloakRealmRoles = List.of();
 
@@ -82,7 +64,6 @@ public class SecurityConfig {
                         .collect(Collectors.toList());
             }
 
-            // Extraire les rôles depuis resource_access.jonk-back.roles
             Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
             Collection<GrantedAuthority> resourceRoles = List.of();
 
@@ -93,12 +74,11 @@ public class SecurityConfig {
                     @SuppressWarnings("unchecked")
                     List<String> roles = (List<String>) clientAccess.get("roles");
                     resourceRoles = roles.stream()
-                            .map(SimpleGrantedAuthority::new) // Les rôles sont déjà préfixés avec ROLE_
+                            .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
                 }
             }
 
-            // Combiner toutes les autorités
             return Stream.of(authorities.stream(), keycloakRealmRoles.stream(), resourceRoles.stream())
                     .flatMap(s -> s)
                     .collect(Collectors.toSet());
@@ -107,9 +87,6 @@ public class SecurityConfig {
         return converter;
     }
 
-    /**
-     * Configuration CORS pour permettre les requêtes depuis un frontend
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

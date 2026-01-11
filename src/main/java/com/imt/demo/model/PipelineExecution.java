@@ -7,13 +7,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Document MongoDB représentant l'exécution d'un pipeline
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -43,20 +41,13 @@ public class PipelineExecution {
 
     private String triggeredBy;
 
-    /**
-     * Ajoute un résultat d'étape
-     */
     public void addStepResult(StepResult stepResult) {
         this.steps.add(stepResult);
     }
 
-    /**
-     * Calcule la durée totale
-     */
     public void calculateDuration() {
         if (startTime != null && endTime != null) {
-            this.durationMs = java.time.Duration.between(startTime, endTime).toMillis();
+            this.durationMs = Duration.between(startTime, endTime).toMillis();
         }
     }
 }
-

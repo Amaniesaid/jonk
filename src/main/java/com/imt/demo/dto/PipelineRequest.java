@@ -7,46 +7,34 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-/**
- * DTO pour la requête de déclenchement d'un pipeline
- */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PipelineRequest {
 
-    // === Configuration Git (obligatoire) ===
     private String gitUrl;
     private String branch;
 
-    // === Configuration Build ===
-    private String buildTool; // maven, gradle (défaut: maven)
+    private String buildTool;
 
-    // === Configuration Docker (obligatoire) ===
     private String dockerImageName;
     private String dockerPort;
-    private String dockerImageTag; // optionnel (généré automatiquement si absent)
-    private String dockerRegistry; // optionnel
+    private String dockerImageTag;
+    private String dockerRegistry;
 
-    // === Configuration SonarQube (optionnel) ===
     private String sonarQubeUrl;
     private String sonarQubeToken;
     private String sonarProjectKey;
 
-    // === Activation/désactivation des étapes (optionnel) ===
-    // DEV: permet d'activer SonarQube sans demander sonar.host.url / sonar.projectKey au client.
     private Boolean sonarEnabled;
 
-    // === Configuration Déploiement (optionnel) ===
-    private String deploymentHost; // null = déploiement local
+    private String deploymentHost;
     private String deploymentUser;
-    private String deploymentPort; // ex: "8080"
+    private String deploymentPort;
     private String sshKeyPath;
 
-    // === Variables d'environnement personnalisées ===
     private Map<String, String> environmentVariables;
 
-    // === Métadonnées ===
-    private String triggeredBy; // Nom de l'utilisateur qui déclenche le pipeline
+    private String triggeredBy;
 }

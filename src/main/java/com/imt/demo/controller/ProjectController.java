@@ -43,13 +43,11 @@ public class ProjectController {
         return projectService.createProject(projectDto);
     }
 
-
     @PostMapping("/{id}/pipeline")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public ResponseEntity<Map<String, String>> runPipeline(@PathVariable String id) {
         return projectService.runPipeline(id);
     }
-
 
     @GetMapping("/{id}/pipeline/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
@@ -57,11 +55,9 @@ public class ProjectController {
         return projectService.getPipelineHistory(id);
     }
 
-
     @GetMapping("/{id}/pipeline/{pipelineId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public PipelineResponse getPipelineStatus(@PathVariable String id, @PathVariable String pipelineId) {
         return projectService.getPipelineStatus(pipelineId);
     }
-
 }

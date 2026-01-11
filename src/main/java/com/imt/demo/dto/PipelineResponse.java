@@ -1,7 +1,9 @@
 package com.imt.demo.dto;
 
+import com.imt.demo.model.PipelineExecution;
 import com.imt.demo.model.PipelineStatus;
 import com.imt.demo.model.StepResult;
+import com.imt.demo.model.StepStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,9 +12,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * DTO pour la réponse contenant les informations d'un pipeline
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,18 +29,13 @@ public class PipelineResponse {
     private String errorMessage;
     private String triggeredBy;
 
-    // Résumé des étapes
     private Integer totalSteps;
     private Integer successSteps;
     private Integer failedSteps;
 
-    // Détails des étapes (optionnel selon l'endpoint)
     private List<StepResult> steps;
 
-    /**
-     * Construit une réponse simple sans les détails des étapes
-     */
-    public static PipelineResponse fromExecution(com.imt.demo.model.PipelineExecution execution, boolean includeSteps) {
+    public static PipelineResponse fromExecution(PipelineExecution execution, boolean includeSteps) {
         PipelineResponseBuilder builder = PipelineResponse.builder()
                 .executionId(execution.getId())
                 .gitRepoUrl(execution.getGitRepoUrl())
@@ -56,10 +50,10 @@ public class PipelineResponse {
 
         if (execution.getSteps() != null) {
             long success = execution.getSteps().stream()
-                    .filter(s -> s.getStatus() == com.imt.demo.model.StepStatus.SUCCESS)
+                    .filter(s -> s.getStatus() == StepStatus.SUCCESS)
                     .count();
             long failed = execution.getSteps().stream()
-                    .filter(s -> s.getStatus() == com.imt.demo.model.StepStatus.FAILED)
+                    .filter(s -> s.getStatus() == StepStatus.FAILED)
                     .count();
 
             builder.totalSteps(execution.getSteps().size())

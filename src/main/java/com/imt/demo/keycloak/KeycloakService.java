@@ -24,9 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class KeycloakService {
     private final Keycloak keycloak;
-
     private final KeycloakProperties properties;
-
     private final KeycloakUserMapper keycloakUserMapper = new KeycloakUserMapper();
 
     private String clientUUID;
@@ -51,7 +49,7 @@ public class KeycloakService {
         RealmResource realm = getRealm();
         UsersResource users = realm.users();
 
-        return  users
+        return users
                 .list()
                 .stream()
                 .map(userRepresentation -> toUserDto(userRepresentation, users.get(userRepresentation.getId())))
@@ -75,11 +73,9 @@ public class KeycloakService {
 
         if (adminStatus) {
             Optional<RoleRepresentation> foundAdminRole = findAdminRole(roleScopeResource.listAvailable());
-
             foundAdminRole.ifPresent(adminRole -> roleScopeResource.add(List.of(adminRole)));
         } else {
             Optional<RoleRepresentation> foundAdminRole = findAdminRole(roleScopeResource.listEffective());
-
             foundAdminRole.ifPresent(adminRole -> roleScopeResource.remove(List.of(adminRole)));
         }
     }
@@ -96,7 +92,6 @@ public class KeycloakService {
     }
 
     public UserDto getUser(String id) {
-
         RealmResource realm = getRealm();
         UsersResource users = realm.users();
         UserResource userResource = users.get(id);

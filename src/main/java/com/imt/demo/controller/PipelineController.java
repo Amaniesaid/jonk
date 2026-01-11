@@ -19,9 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Contrôleur REST pour gérer les pipelines CI/CD
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/pipeline")
@@ -30,25 +27,20 @@ public class PipelineController {
 
     private final PipelineService pipelineService;
 
-    /**
-     * Endpoint pour déclencher un nouveau pipeline
-     * POST /api/pipeline/run
-     */
     @PostMapping("/run")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public ResponseEntity<Map<String, String>> runPipeline(@RequestBody PipelineRequest request) {
-        log.info(" Requête de déclenchement de pipeline reçue");
-        log.info("   Git URL: {}", request.getGitUrl());
-        log.info("   Branche: {}", request.getBranch());
+        log.info("Requete de declenchement de pipeline recue");
+        log.info("Git URL: {}", request.getGitUrl());
+        log.info("Branche: {}", request.getBranch());
 
-        // Validation de base
         if (request.getGitUrl() == null || request.getGitUrl().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "L'URL du dépôt Git est obligatoire"));
+                    .body(Map.of("error", "L'URL du depot Git est obligatoire"));
         }
 
         if (request.getBranch() == null || request.getBranch().isEmpty()) {
-            request.setBranch("main"); // Branche par défaut
+            request.setBranch("main");
         }
 
         if (request.getDockerImageName() == null || request.getDockerImageName().isEmpty()) {
@@ -57,36 +49,29 @@ public class PipelineController {
         }
 
         try {
-            // Convertir la requête en contexte
             PipelineContext context = buildContextFromRequest(request);
-
-            // Lancer le pipeline de manière asynchrone
             String executionId = pipelineService.runPipelineAsync(context).join();
 
-            log.info(" Pipeline lancé avec succès: {}", executionId);
+            log.info("Pipeline lance avec succes: {}", executionId);
 
             Map<String, String> response = new HashMap<>();
             response.put("executionId", executionId);
-            response.put("message", "Pipeline démarré avec succès");
+            response.put("message", "Pipeline demarre avec succes");
             response.put("status", "RUNNING");
 
             return ResponseEntity.accepted().body(response);
 
         } catch (Exception e) {
-            log.error(" Erreur lors du lancement du pipeline", e);
+            log.error("Erreur lors du lancement du pipeline", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Erreur lors du lancement: " + e.getMessage()));
         }
     }
 
-    /**
-     * Récupère les détails d'une exécution de pipeline
-     * GET /api/pipeline/{id}
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<?> getPipeline(@PathVariable String id) {
-        log.info(" Récupération du pipeline: {}", id);
+        log.info("Recuperation du pipeline: {}", id);
 
         Optional<PipelineExecution> execution = pipelineService.getExecution(id);
 
@@ -98,14 +83,10 @@ public class PipelineController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Récupère les logs d'une exécution
-     * GET /api/pipeline/{id}/logs
-     */
     @GetMapping("/{id}/logs")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<?> getPipelineLogs(@PathVariable String id) {
-        log.info(" Récupération des logs du pipeline: {}", id);
+        log.info("Recuperation des logs du pipeline: {}", id);
 
         Optional<PipelineExecution> execution = pipelineService.getExecution(id);
 
@@ -121,14 +102,10 @@ public class PipelineController {
         ));
     }
 
-    /**
-     * Liste toutes les exécutions récentes
-     * GET /api/pipeline/executions
-     */
     @GetMapping("/executions")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<List<PipelineResponse>> getRecentExecutions() {
-        log.info(" Récupération des exécutions récentes");
+        log.info("Recuperation des executions recentes");
 
         List<PipelineExecution> executions = pipelineService.getRecentExecutions();
         List<PipelineResponse> responses = executions.stream()
@@ -138,14 +115,10 @@ public class PipelineController {
         return ResponseEntity.ok(responses);
     }
 
-    /**
-     * Récupère les exécutions par statut
-     * GET /api/pipeline/executions/status/{status}
-     */
     @GetMapping("/executions/status/{status}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
     public ResponseEntity<List<PipelineResponse>> getExecutionsByStatus(@PathVariable String status) {
-        log.info(" Récupération des exécutions avec statut: {}", status);
+        log.info("Recuperation des executions avec statut: {}", status);
 
         try {
             PipelineStatus pipelineStatus = PipelineStatus.valueOf(status.toUpperCase());
@@ -160,20 +133,16 @@ public class PipelineController {
         }
     }
 
-    /**
-     * Annule une exécution en cours
-     * POST /api/pipeline/{id}/cancel
-     */
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
     public ResponseEntity<?> cancelPipeline(@PathVariable String id) {
-        log.info("  Demande d'annulation du pipeline: {}", id);
+        log.info("Demande d'annulation du pipeline: {}", id);
 
         boolean cancelled = pipelineService.cancelExecution(id);
 
         if (cancelled) {
             return ResponseEntity.ok(Map.of(
-                    "message", "Pipeline annulé avec succès",
+                    "message", "Pipeline annule avec succes",
                     "executionId", id
             ));
         } else {
@@ -182,10 +151,6 @@ public class PipelineController {
         }
     }
 
-    /**
-     * Endpoint de santé pour vérifier que l'API fonctionne
-     * GET /api/pipeline/health
-     */
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of(
@@ -195,9 +160,6 @@ public class PipelineController {
         ));
     }
 
-    /**
-     * Convertit une requête en contexte de pipeline
-     */
     private PipelineContext buildContextFromRequest(PipelineRequest request) {
         return PipelineContext.builder()
                 .gitUrl(request.getGitUrl())

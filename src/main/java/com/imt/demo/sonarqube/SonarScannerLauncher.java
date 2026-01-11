@@ -47,8 +47,6 @@ public class SonarScannerLauncher {
             command.add("-Dsonar.projectVersion=" + request.getProjectVersion());
         }
 
-        // Use conventional defaults for Java/Maven builds
-        // - For Maven projects, binaries should already exist (previous Maven Build step).
         Path targetClasses = request.getWorkspaceDir().toPath().resolve("target/classes");
         if (Files.exists(targetClasses)) {
             command.add("-Dsonar.java.binaries=target/classes");
@@ -59,7 +57,6 @@ public class SonarScannerLauncher {
             command.add("-Dsonar.sources=src");
         }
 
-        // Ensure baseDir is the workspace root
         command.add("-Dsonar.projectBaseDir=" + request.getWorkspaceDir().getAbsolutePath());
 
         ProcessBuilder pb = new ProcessBuilder(command);
@@ -71,7 +68,7 @@ public class SonarScannerLauncher {
         }
 
         LocalDateTime start = LocalDateTime.now();
-        emit(logLineConsumer, "Début analyse SonarScanner (projectKey=" + request.getProjectKey() + ")");
+        emit(logLineConsumer, "Debut analyse SonarScanner (projectKey=" + request.getProjectKey() + ")");
         emit(logLineConsumer, "Commande: " + String.join(" ", command));
 
         try {
@@ -91,7 +88,6 @@ public class SonarScannerLauncher {
                 throw new IllegalStateException("SonarScanner failed with exit code " + exitCode);
             }
 
-            // SonarScanner writes .scannerwork/report-task.txt (includes ceTaskId)
             Path reportTaskPath = request.getWorkspaceDir().toPath().resolve(".scannerwork/report-task.txt");
             if (!Files.exists(reportTaskPath)) {
                 throw new IllegalStateException("Sonar report-task.txt not found (expected at .scannerwork/report-task.txt)");

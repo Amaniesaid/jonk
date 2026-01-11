@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Résultat de l'exécution d'une étape
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,20 +31,13 @@ public class StepResult {
 
     private Long durationMs;
 
-    /**
-     * Ajoute une ligne de log
-     */
     public void addLog(String log) {
         this.logs.add(log);
     }
 
-    /**
-     * Calcule la durée d'exécution
-     */
     public void calculateDuration() {
         if (startTime != null && endTime != null) {
-            this.durationMs = java.time.Duration.between(startTime, endTime).toMillis();
+            this.durationMs = Duration.between(startTime, endTime).toMillis();
         }
     }
 }
-

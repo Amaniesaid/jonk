@@ -2,18 +2,21 @@ package com.imt.demo.steps;
 
 import com.imt.demo.model.PipelineContext;
 import com.imt.demo.model.StepResult;
+import com.imt.demo.model.StepStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Étape 7: Déploiement de l'image Docker sur un serveur distant via SSH
- */
 @Slf4j
 @Component
 public class DockerDeployStep extends AbstractPipelineStep {
+
+    private static final String CONTAINER_PORT = "8089";
+    private static final String APPLICATION_PORT = "8080";
 
     @Override
     public String getName() {
@@ -27,97 +30,76 @@ public class DockerDeployStep extends AbstractPipelineStep {
                 context.getContainerName() :
                 "jonk-app-" + context.getPipelineId();
 
-        // Sauvegarder le nom du container pour le rollback
         context.setContainerName(containerName);
 
-        // Si déploiement distant (SSH)
         if (context.getDeploymentHost() != null && context.getSshUser() != null) {
             return deployRemote(context, fullImageName, containerName);
         } else {
-            // Déploiement local
             return deployLocal(context, fullImageName, containerName);
         }
     }
 
-    /**
-     * Déploiement local (sur la même machine)
-     */
     private StepResult deployLocal(PipelineContext context, String imageName, String containerName) {
         List<String[]> commands = new ArrayList<>();
 
-        // Vérifier et nettoyer le container existant si nécessaire
         if (containerExists(containerName)) {
-            log.info("Container existant détecté ({}), nettoyage en cours...", containerName);
-            
-            // Arrêter le container existant
+            log.info("Container existant detecte ({}), nettoyage en cours...", containerName);
             commands.add(new String[]{"docker", "stop", containerName});
-            
-            // Supprimer le container
             commands.add(new String[]{"docker", "rm", containerName});
         } else {
-            log.info("Aucun container existant nommé '{}', vérification du port...", containerName);
+            log.info("Aucun container existant nomme '{}', verification du port...", containerName);
         }
 
-        // Vérifier si le port est déjà utilisé et nettoyer si nécessaire
         String portInUse = findContainerUsingPort(context.getDeploymentPort());
         if (portInUse != null && !portInUse.equals(containerName)) {
-            log.info("Port {} déjà utilisé par le container '{}', nettoyage...", context.getDeploymentPort(), portInUse);
-            
-            // Arrêter le container qui utilise le port
+            log.info("Port {} deja utilise par le container '{}', nettoyage...", context.getDeploymentPort(), portInUse);
             commands.add(new String[]{"docker", "stop", portInUse});
-            
-            // Supprimer le container
             commands.add(new String[]{"docker", "rm", portInUse});
         }
 
-        // Démarrer le nouveau container
         String[] runCommand = {
             "docker", "run",
             "-d",
             "--name", containerName,
-            "-p", "8089:8080",
+            "-p", CONTAINER_PORT + ":" + APPLICATION_PORT,
             imageName
         };
         commands.add(runCommand);
 
         StepResult result = executeCommands(commands, null, null);
 
-        if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog("✓ Application déployée localement");
-            result.addLog("  Container: " + containerName);
-            result.addLog("  Port: " + context.getDeploymentPort());
-            result.addLog("  Image: " + imageName);
+        if (result.getStatus() == StepStatus.SUCCESS) {
+            result.addLog("Application deployee localement");
+            result.addLog("Container: " + containerName);
+            result.addLog("Port: " + context.getDeploymentPort());
+            result.addLog("Image: " + imageName);
         }
 
         return result;
     }
 
-    /**
-     * Déploiement distant via SSH
-     */
     private StepResult deployRemote(PipelineContext context, String imageName, String containerName) {
         String sshTarget = context.getSshUser() + "@" + context.getDeploymentHost();
 
         List<String[]> commands = new ArrayList<>();
 
-        // 1. Exporter l'image Docker vers un fichier tar
         String imageTarFile = context.getWorkspaceDir() + context.getPipelineId() + ".tar";
         commands.add(new String[]{"docker", "save", "-o", imageTarFile, imageName});
 
-        // 2. Copier l'image vers le serveur distant
-        String[] scpCommand = {
-            "scp",
-                "-P", context.getDeploymentPort(),
-            "-o", "StrictHostKeyChecking=no",
-            imageTarFile,
-            sshTarget + ":/tmp/"
-        };
-
+        String[] scpCommand;
         if (context.getSshKeyPath() != null) {
             scpCommand = new String[]{
                 "scp",
-                    "-P", context.getDeploymentPort(),
+                "-P", context.getDeploymentPort(),
                 "-i", context.getSshKeyPath(),
+                "-o", "StrictHostKeyChecking=no",
+                imageTarFile,
+                sshTarget + ":/tmp/"
+            };
+        } else {
+            scpCommand = new String[]{
+                "scp",
+                "-P", context.getDeploymentPort(),
                 "-o", "StrictHostKeyChecking=no",
                 imageTarFile,
                 sshTarget + ":/tmp/"
@@ -125,35 +107,36 @@ public class DockerDeployStep extends AbstractPipelineStep {
         }
         commands.add(scpCommand);
 
-        // 3. Charger l'image sur le serveur distant et déployer
         String remoteCommands = String.format(
             "docker load -i /tmp/%s.tar && " +
             "docker stop %s || true && " +
             "docker rm %s || true && " +
-            "docker run -d --name %s -p 8089:8080 %s && " +
+            "docker run -d --name %s -p %s:%s %s && " +
             "rm /tmp/%s.tar",
             context.getPipelineId(),
             containerName,
             containerName,
             containerName,
-//            context.getDeploymentPort(),
+            CONTAINER_PORT,
+            APPLICATION_PORT,
             imageName,
             context.getPipelineId()
         );
 
-        String[] sshCommand = {
-            "ssh",
-                "-p", context.getDeploymentPort(),
-            "-o", "StrictHostKeyChecking=no",
-            sshTarget,
-            remoteCommands
-        };
-
+        String[] sshCommand;
         if (context.getSshKeyPath() != null) {
             sshCommand = new String[]{
                 "ssh",
-                    "-p", context.getDeploymentPort(),
+                "-p", context.getDeploymentPort(),
                 "-i", context.getSshKeyPath(),
+                "-o", "StrictHostKeyChecking=no",
+                sshTarget,
+                remoteCommands
+            };
+        } else {
+            sshCommand = new String[]{
+                "ssh",
+                "-p", context.getDeploymentPort(),
                 "-o", "StrictHostKeyChecking=no",
                 sshTarget,
                 remoteCommands
@@ -161,27 +144,18 @@ public class DockerDeployStep extends AbstractPipelineStep {
         }
         commands.add(sshCommand);
 
-        // 4. Nettoyer le fichier tar local
-//        commands.add(new String[]{"del", imageTarFile});
-
         StepResult result = executeCommands(commands, null, null);
 
-        if (result.getStatus() == com.imt.demo.model.StepStatus.SUCCESS) {
-            result.addLog("✓ Application déployée sur " + context.getDeploymentHost());
-            result.addLog("  Container: " + containerName);
-            result.addLog("  Port: " + context.getDeploymentPort());
-            result.addLog("  Image: " + imageName);
+        if (result.getStatus() == StepStatus.SUCCESS) {
+            result.addLog("Application deployee sur " + context.getDeploymentHost());
+            result.addLog("Container: " + containerName);
+            result.addLog("Port: " + context.getDeploymentPort());
+            result.addLog("Image: " + imageName);
         }
 
         return result;
     }
 
-    /**
-     * Vérifie si un container Docker existe (en cours d'exécution ou arrêté)
-     * 
-     * @param containerName Le nom du container à vérifier
-     * @return true si le container existe, false sinon
-     */
     private boolean containerExists(String containerName) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(
@@ -189,37 +163,28 @@ public class DockerDeployStep extends AbstractPipelineStep {
             );
             Process process = processBuilder.start();
             
-            try (java.io.BufferedReader reader = new java.io.BufferedReader(
-                    new java.io.InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
                 String line = reader.readLine();
                 int exitCode = process.waitFor();
                 
-                // Vérifier si le nom exact correspond
                 return exitCode == 0 && line != null && line.trim().equals(containerName);
             }
         } catch (Exception e) {
-            log.debug("Erreur lors de la vérification du container: {}", e.getMessage());
+            log.debug("Erreur lors de la verification du container: {}", e.getMessage());
             return false;
         }
     }
 
-    /**
-     * Trouve le nom du container qui utilise un port spécifique
-     * 
-     * @param port Le port à vérifier (par exemple "8082")
-     * @return Le nom du container utilisant le port, ou null si aucun
-     */
     private String findContainerUsingPort(String port) {
         try {
-            // Commande pour trouver les containers utilisant le port
-            // Format: docker ps --filter "publish=8082" --format "{{.Names}}"
             ProcessBuilder processBuilder = new ProcessBuilder(
                 "docker", "ps", "--filter", "publish=" + port, "--format", "{{.Names}}"
             );
             Process process = processBuilder.start();
             
-            try (java.io.BufferedReader reader = new java.io.BufferedReader(
-                    new java.io.InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
                 String containerName = reader.readLine();
                 int exitCode = process.waitFor();
                 
@@ -236,31 +201,27 @@ public class DockerDeployStep extends AbstractPipelineStep {
 
     @Override
     public void rollback(PipelineContext context) throws Exception {
-        log.info("Rollback du déploiement...");
+        log.info("Rollback du deploiement...");
 
         if (context.getPreviousDockerImageTag() != null) {
-            // Redéployer la version précédente
             String previousImage = context.getDockerImageName() + ":" + context.getPreviousDockerImageTag();
             String containerName = context.getContainerName();
 
             if (containerExists(containerName)) {
-                // Arrêter le container actuel
                 executeCommand(new String[]{"docker", "stop", containerName}, null);
                 executeCommand(new String[]{"docker", "rm", containerName}, null);
             }
 
-            // Redémarrer avec l'ancienne image
             String[] rollbackCommand = {
                 "docker", "run",
                 "-d",
                 "--name", containerName,
-                "-p", "8089:8080",
+                "-p", CONTAINER_PORT + ":" + APPLICATION_PORT,
                 previousImage
             };
 
             executeCommand(rollbackCommand, null);
-            log.info("Rollback terminé: image {} restaurée", previousImage);
+            log.info("Rollback termine: image {} restauree", previousImage);
         }
     }
 }
-

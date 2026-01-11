@@ -7,21 +7,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Étape 8: Vérification de la santé de l'application déployée
- */
 @Slf4j
 @Component
 public class HealthCheckStep extends AbstractPipelineStep {
 
     private static final int MAX_RETRIES = 15;
     private static final int RETRY_DELAY_MS = 4000;
+    private static final int DEFAULT_PORT = 8080;
+    private static final String DEFAULT_CHECK_PORT = "8089";
 
     @Override
     public String getName() {
@@ -37,29 +37,25 @@ public class HealthCheckStep extends AbstractPipelineStep {
                 .build();
 
         String host = context.getDeploymentHost() != null ? context.getDeploymentHost() : "localhost";
-        String portStr = "8089"; // context.getDeploymentPort();
-        Integer port = portStr != null ? Integer.parseInt(portStr) : 8080;
+        int port = Integer.parseInt(DEFAULT_CHECK_PORT);
 
-        result.addLog(String.format("🔍 Vérification de l'application sur %s:%d", host, port));
+        result.addLog(String.format("Verification de l'application sur %s:%d", host, port));
 
-        // Liste des endpoints à tester par ordre de priorité
         List<String> endpointsToTest = new ArrayList<>();
-        endpointsToTest.add("/actuator/health");  // Spring Boot Actuator
-        endpointsToTest.add("/health");           // Alternative simple
-        endpointsToTest.add("/");                 // Page d'accueil
+        endpointsToTest.add("/actuator/health");
+        endpointsToTest.add("/health");
+        endpointsToTest.add("/");
 
         boolean isHealthy = false;
         String successfulEndpoint = null;
         int successfulStatusCode = -1;
 
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            result.addLog(String.format("⏳ Tentative %d/%d...", attempt, MAX_RETRIES));
+            result.addLog(String.format("Tentative %d/%d...", attempt, MAX_RETRIES));
 
-            // D'abord, vérifier que le port est ouvert (connexion TCP)
             if (isPortOpen(host, port)) {
-                result.addLog(String.format("  ✓ Port %d accessible", port));
+                result.addLog(String.format("Port %d accessible", port));
 
-                // Tester les différents endpoints HTTP
                 for (String endpoint : endpointsToTest) {
                     String url = String.format("http://%s:%d%s", host, port, endpoint);
                     HealthCheckResult checkResult = checkEndpoint(url);
@@ -68,25 +64,22 @@ public class HealthCheckStep extends AbstractPipelineStep {
                         isHealthy = true;
                         successfulEndpoint = endpoint;
                         successfulStatusCode = checkResult.getStatusCode();
-                        result.addLog(String.format("  ✓ Endpoint '%s' répond avec code %d", endpoint, checkResult.getStatusCode()));
-                        result.addLog("✓ Application en ligne et opérationnelle!");
+                        result.addLog(String.format("Endpoint '%s' repond avec code %d", endpoint, checkResult.getStatusCode()));
+                        result.addLog("Application en ligne et operationnelle!");
                         result.setStatus(StepStatus.SUCCESS);
                         break;
                     } else if (checkResult.getStatusCode() >= 400 && checkResult.getStatusCode() < 600) {
-                        // Si l'application répond avec un code 4xx ou 5xx, elle est vivante
-                        // On considère cela comme un succès car l'application répond
                         isHealthy = true;
                         successfulEndpoint = endpoint;
                         successfulStatusCode = checkResult.getStatusCode();
-                        result.addLog(String.format("  ✓ Endpoint '%s' répond avec code %d (application vivante)", endpoint, checkResult.getStatusCode()));
-                        result.addLog("✓ Application en ligne et opérationnelle!");
+                        result.addLog(String.format("Endpoint '%s' repond avec code %d (application vivante)", endpoint, checkResult.getStatusCode()));
+                        result.addLog("Application en ligne et operationnelle!");
                         result.setStatus(StepStatus.SUCCESS);
                         break;
                     } else if (checkResult.getStatusCode() == -3) {
-                        // Connection reset - application en cours de démarrage
-                        result.addLog(String.format("  ⏳ Endpoint '%s': Connection reset (démarrage en cours...)", endpoint));
+                        result.addLog(String.format("Endpoint '%s': Connection reset (demarrage en cours...)", endpoint));
                     } else if (checkResult.getStatusCode() != -1) {
-                        result.addLog(String.format("  ⚠ Endpoint '%s' code: %d", endpoint, checkResult.getStatusCode()));
+                        result.addLog(String.format("Endpoint '%s' code: %d", endpoint, checkResult.getStatusCode()));
                     }
                 }
 
@@ -94,7 +87,7 @@ public class HealthCheckStep extends AbstractPipelineStep {
                     break;
                 }
             } else {
-                result.addLog(String.format("  ⏳ Port %d non accessible, l'application démarre...", port));
+                result.addLog(String.format("Port %d non accessible, l'application demarre...", port));
             }
 
             if (attempt < MAX_RETRIES) {
@@ -105,18 +98,18 @@ public class HealthCheckStep extends AbstractPipelineStep {
         if (!isHealthy) {
             result.setStatus(StepStatus.FAILED);
             result.setErrorMessage(String.format(
-                "L'application n'a pas démarré correctement après %d tentatives (%.1f secondes)",
+                "L'application n'a pas demarre correctement apres %d tentatives (%.1f secondes)",
                 MAX_RETRIES,
                 (MAX_RETRIES * RETRY_DELAY_MS) / 1000.0
             ));
-            result.addLog("✗ Échec du health check");
+            result.addLog("Echec du health check");
             result.addLog("");
-            result.addLog("💡 Suggestions de débogage:");
-            result.addLog("   1. Vérifier les logs du container: docker logs " + context.getContainerName());
-            result.addLog("   2. Vérifier que l'application démarre correctement");
-            result.addLog("   3. Vérifier que le port 8080 est exposé dans le container");
+            result.addLog("Suggestions de debogage:");
+            result.addLog("  1. Verifier les logs du container: docker logs " + context.getContainerName());
+            result.addLog("  2. Verifier que l'application demarre correctement");
+            result.addLog("  3. Verifier que le port 8080 est expose dans le container");
         } else {
-            result.addLog(String.format("📊 Health check validé via: %s (code %d)", successfulEndpoint, successfulStatusCode));
+            result.addLog(String.format("Health check valide via: %s (code %d)", successfulEndpoint, successfulStatusCode));
         }
 
         result.setEndTime(LocalDateTime.now());
@@ -125,40 +118,26 @@ public class HealthCheckStep extends AbstractPipelineStep {
         return result;
     }
 
-    /**
-     * Vérifie si un port est ouvert sur un hôte donné
-     * 
-     * @param host L'hôte à tester
-     * @param port Le port à tester
-     * @return true si le port est ouvert, false sinon
-     */
     private boolean isPortOpen(String host, int port) {
         try (Socket socket = new Socket()) {
-            socket.connect(new java.net.InetSocketAddress(host, port), 5000);
+            socket.connect(new InetSocketAddress(host, port), 5000);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    /**
-     * Vérifie un endpoint HTTP
-     * 
-     * @param urlString L'URL de l'endpoint à tester
-     * @return Le résultat du health check
-     */
     private HealthCheckResult checkEndpoint(String urlString) {
         try {
             URI uri = URI.create(urlString);
             HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(15000);  // Augmenté à 15 secondes
-            connection.setReadTimeout(15000);     // Augmenté à 15 secondes
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(15000);
             connection.setInstanceFollowRedirects(true);
 
             int responseCode = connection.getResponseCode();
 
-            // Considérer 2xx et 3xx comme succès optimal
             boolean success = (responseCode >= 200 && responseCode < 400);
 
             connection.disconnect();
@@ -166,17 +145,14 @@ public class HealthCheckStep extends AbstractPipelineStep {
             return new HealthCheckResult(success, responseCode);
 
         } catch (java.net.ConnectException e) {
-            // Port fermé ou application pas encore prête
-            log.debug("Connexion refusée pour {}: {}", urlString, e.getMessage());
+            log.debug("Connexion refusee pour {}: {}", urlString, e.getMessage());
             return new HealthCheckResult(false, -1);
         } catch (java.net.SocketTimeoutException e) {
-            // Timeout - l'application est peut-être lente à répondre
             log.debug("Timeout pour {}: {}", urlString, e.getMessage());
             return new HealthCheckResult(false, -2);
         } catch (java.io.IOException e) {
-            // Connection reset - l'application démarre mais n'est pas encore complètement prête
             if (e.getMessage() != null && e.getMessage().contains("Connection reset")) {
-                log.debug("Connection reset pour {} - application en cours de démarrage", urlString);
+                log.debug("Connection reset pour {} - application en cours de demarrage", urlString);
                 return new HealthCheckResult(false, -3);
             }
             log.debug("IOException pour {}: {}", urlString, e.getMessage());
@@ -192,9 +168,6 @@ public class HealthCheckStep extends AbstractPipelineStep {
         return true;
     }
 
-    /**
-     * Classe interne pour stocker le résultat d'un health check
-     */
     private static class HealthCheckResult {
         private final boolean success;
         private final int statusCode;

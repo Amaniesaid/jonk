@@ -75,7 +75,6 @@ public class SonarApiClient {
 
         String token = properties.getToken();
         if (token != null && !token.isBlank()) {
-            // SonarQube token auth: Basic base64(token:)
             String basic = Base64.getEncoder().encodeToString((token + ":").getBytes(StandardCharsets.UTF_8));
             builder.header("Authorization", "Basic " + basic);
         }

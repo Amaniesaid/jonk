@@ -1,9 +1,9 @@
 package com.imt.demo.service;
 
-import com.imt.demo.controller.PipelineController;
 import com.imt.demo.dto.PipelineRequest;
 import com.imt.demo.dto.PipelineResponse;
 import com.imt.demo.dto.ProjectDto;
+import com.imt.demo.model.PipelineContext;
 import com.imt.demo.model.PipelineExecution;
 import com.imt.demo.repository.PipelineExecutionRepository;
 import com.imt.demo.repository.ProjectRepository;
@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,9 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectService {
     private final PipelineExecutionRepository pipelineExecutionRepository;
-
-    private final PipelineController pipelineController;
-
+    private final PipelineService pipelineService;
     private final ProjectRepository projectRepository;
 
     public List<ProjectDto> getProjects() {
@@ -39,44 +38,57 @@ public class ProjectService {
 
     public ProjectDto createProject(ProjectDto projectDto) {
         return projectRepository.save(projectDto);
-
     }
 
     public ResponseEntity<Map<String, String>> runPipeline(String id) {
-        ProjectDto project = projectRepository.findById(id).orElseThrow(() -> new NotFoundException("No such project " + id));
+        ProjectDto project = projectRepository.findById(id).orElseThrow(() -> 
+            new NotFoundException("No such project " + id)
+        );
 
-        PipelineRequest request = new PipelineRequest();
-        request.setGitUrl(project.getGiturl());
-        request.setBranch("main");
+        PipelineContext context = PipelineContext.builder()
+                .gitUrl(project.getGiturl())
+                .branch("main")
+                .dockerImageName("tuto-web-service")
+                .deploymentHost("localhost")
+                .deploymentUser("debian")
+                .deploymentPort("2288")
+                .environmentVariables(new HashMap<>())
+                .triggeredBy("user")
+                .build();
 
-        request.setDockerImageName("tuto-web-service");
-        request.setDeploymentHost("localhost");
-        request.setDeploymentUser("debian");
-        request.setDockerPort("8089");
-        request.setDeploymentPort("2288");
-
-
-        return pipelineController.runPipeline(request);
+        try {
+            String executionId = pipelineService.runPipelineAsync(context).join();
+            
+            log.info("Pipeline lance avec succes: {}", executionId);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("executionId", executionId);
+            response.put("message", "Pipeline demarre avec succes");
+            response.put("status", "RUNNING");
+            
+            return ResponseEntity.accepted().body(response);
+        } catch (Exception e) {
+            log.error("Erreur lors du lancement du pipeline", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Erreur lors du lancement: " + e.getMessage()));
+        }
     }
 
     public List<PipelineResponse> getPipelineHistory(String id) {
-        ProjectDto project = projectRepository.findById(id).orElseThrow(() -> new NotFoundException("No such project " + id));
+        ProjectDto project = projectRepository.findById(id).orElseThrow(() -> 
+            new NotFoundException("No such project " + id)
+        );
 
-
-        List<PipelineExecution> executions =  pipelineExecutionRepository.findByGitRepoUrl(project.getGiturl());
-        List<PipelineResponse> responses = executions.stream()
+        List<PipelineExecution> executions = pipelineExecutionRepository.findByGitRepoUrl(project.getGiturl());
+        return executions.stream()
                 .map(exec -> PipelineResponse.fromExecution(exec, false))
                 .collect(Collectors.toList());
-
-        return responses;
-
     }
 
     public PipelineResponse getPipelineStatus(String pipelineId) {
-        PipelineExecution exec =  pipelineExecutionRepository.findById(pipelineId).orElseThrow(() -> new NotFoundException("No such pipeline " + pipelineId));
-        PipelineResponse response = PipelineResponse.fromExecution(exec, true);
-
-        return response;
-
+        PipelineExecution exec = pipelineExecutionRepository.findById(pipelineId).orElseThrow(() -> 
+            new NotFoundException("No such pipeline " + pipelineId)
+        );
+        return PipelineResponse.fromExecution(exec, true);
     }
 }

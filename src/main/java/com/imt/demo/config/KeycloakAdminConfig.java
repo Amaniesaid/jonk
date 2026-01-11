@@ -17,7 +17,7 @@ public class KeycloakAdminConfig {
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(properties.getServerUrl())
-                .realm(properties.getRealm()) // The realm where the admin user exists
+                .realm(properties.getRealm())
                 .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .clientId(properties.getClientId())
                 .clientSecret(properties.getClientSecret())
