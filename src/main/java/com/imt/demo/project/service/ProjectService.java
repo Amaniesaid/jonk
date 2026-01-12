@@ -86,6 +86,7 @@ public class ProjectService {
                 .deploymentPort(prodMachine.getHostSshPort())
                 .applicationPort(project.getContainerPort())
                 .applicationHostPort(prodMachine.getDeploymentPort())
+                .containerName(project.getDockerImageName() + project.getId().toString())
                 .environmentVariables(new HashMap<>())
                 .triggeredBy(userTrigger)
                 .build();

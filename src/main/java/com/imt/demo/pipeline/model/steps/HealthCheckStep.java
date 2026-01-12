@@ -20,7 +20,6 @@ public class HealthCheckStep extends AbstractPipelineStep {
 
     private static final int MAX_RETRIES = 15;
     private static final int RETRY_DELAY_MS = 4000;
-    private static final String DEFAULT_CHECK_PORT = "8089";
 
     @Override
     public String getName() {
