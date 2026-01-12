@@ -18,6 +18,8 @@ public class SonarQubeProperties {
      */
     private String hostUrl = "http://host.docker.internal:9000";
 
+    private String dockerComposePath = "./docker-dev-env/docker-compose.yml";
+
     /**
      * DEV: token en dur dans application-dev.yml (facilement remplaçable par un secret manager)
      */
