@@ -18,6 +18,7 @@ public class MachineMapper {
         machine.setHostSshPort(machineDto.getHostSshPort());
         machine.setHostSshUsername(machineDto.getHostSshUsername());
         machine.setDeploymentPort(machineDto.getDeploymentPort());
+        machine.setSshHost(machineDto.getSshHost());
         return machine;
     }
 
@@ -32,6 +33,7 @@ public class MachineMapper {
         machineDto.setHostSshPort(machine.getHostSshPort());
         machineDto.setHostSshUsername(machine.getHostSshUsername());
         machineDto.setDeploymentPort(machine.getDeploymentPort());
+        machineDto.setSshHost(machine.getSshHost());
         return machineDto;
     }
 }

@@ -133,10 +133,8 @@ public class PipelineService {
         steps.add(dockerBuildStep);
         steps.add(dockerScanStep);
 
-        if (context.getDeploymentPort() != null) {
-            steps.add(dockerDeployStep);
-            steps.add(healthCheckStep);
-        }
+        steps.add(dockerDeployStep);
+        steps.add(healthCheckStep);
 
         log.info("Pipeline configure avec {} etapes", steps.size());
         return steps;

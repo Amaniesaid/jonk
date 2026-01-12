@@ -27,4 +27,7 @@ public class MachineDto {
 
     @NotNull
     private int deploymentPort;
+
+    @NotNull
+    private String sshHost;
 }

@@ -29,6 +29,8 @@ public class ProjectMapper {
         }
         project.setProjectType(projectDto.getProjectType());
         project.setContainerPort(projectDto.getContainerPort());
+        project.setProdBranchName(projectDto.getProdBranchName());
+        project.setDockerImageName(projectDto.getDockerImageName());
         return project;
     }
 
@@ -47,6 +49,8 @@ public class ProjectMapper {
         }
         projectDto.setProjectType(project.getProjectType());
         projectDto.setContainerPort(project.getContainerPort());
+        projectDto.setProdBranchName(project.getProdBranchName());
+        projectDto.setDockerImageName(project.getDockerImageName());
         return projectDto;
     }
 

@@ -3,13 +3,16 @@ package com.imt.demo.pipeline.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
+@Setter
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,9 +41,10 @@ public class PipelineContext {
 
     private String deploymentHost;
     private String deploymentUser;
-    private String deploymentPort;
+    private int deploymentPort;
     private String sshKeyPath;
     private String deploymentPath;
+    private Integer applicationHostPort;
     private Integer applicationPort;
     private String sshUser;
     private String containerName;

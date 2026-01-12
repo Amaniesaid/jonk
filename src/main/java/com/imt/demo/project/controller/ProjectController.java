@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,8 +55,8 @@ public class ProjectController {
 
     @PostMapping("/{id}/pipeline")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
-    public ResponseEntity<Map<String, String>> runPipeline(@PathVariable UUID id) {
-        return projectService.runPipeline(id);
+    public ResponseEntity<Map<String, String>> runPipeline(@PathVariable UUID id, Principal principal) {
+        return projectService.runPipeline(id, principal.getName());
     }
 
     @GetMapping("/{id}/pipeline/all")

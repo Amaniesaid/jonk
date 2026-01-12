@@ -28,4 +28,10 @@ public class ProjectDto {
 
     @NotNull
     private int containerPort;
+    
+    @NotNull
+    private String prodBranchName;
+
+    @NotNull
+    private String dockerImageName;
 }

@@ -8,8 +8,12 @@ import com.imt.demo.pipeline.service.PipelineService;
 import com.imt.demo.project.dto.ProjectDto;
 import com.imt.demo.project.dto.ProjectSnippetDto;
 import com.imt.demo.project.mapper.ProjectMapper;
+import com.imt.demo.project.model.EnvironmentType;
+import com.imt.demo.project.model.Machine;
 import com.imt.demo.project.model.Project;
 import com.imt.demo.project.repository.ProjectRepository;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,20 +61,28 @@ public class ProjectService {
         return projectMapper.toDto(savedProject);
     }
 
-    public ResponseEntity<Map<String, String>> runPipeline(UUID id) {
+    public ResponseEntity<Map<String, String>> runPipeline(UUID id, String userTrigger) {
         Project project = projectRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("No such project " + id)
         );
 
+        Machine prodMachine = project.getMachines().getFirst();
+
+        if (prodMachine == null || prodMachine.getEnvironmentType() != EnvironmentType.PROD) {
+            throw new InternalServerErrorException("Project has no prod machine: first machine found was {}" + prodMachine);
+        }
+
         PipelineContext context = PipelineContext.builder()
                 .gitUrl(project.getGiturl())
-                .branch("main")
-                .dockerImageName("tuto-web-service")
-                .deploymentHost("localhost")
-                .deploymentUser("debian")
-                .deploymentPort("2288")
+                .branch(project.getProdBranchName())
+                .dockerImageName(project.getDockerImageName())
+                .deploymentHost(prodMachine.getSshHost())
+                .deploymentUser(prodMachine.getHostSshUsername())
+                .deploymentPort(prodMachine.getHostSshPort())
+                .applicationPort(project.getContainerPort())
+                .applicationHostPort(prodMachine.getDeploymentPort())
                 .environmentVariables(new HashMap<>())
-                .triggeredBy("user")
+                .triggeredBy(userTrigger)
                 .build();
 
         try {

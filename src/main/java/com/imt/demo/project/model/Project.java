@@ -19,4 +19,6 @@ public class Project {
     private ProjectType projectType;
     private List<Machine> machines;
     private int containerPort;
+    private String prodBranchName;
+    private String dockerImageName;
 }

@@ -15,9 +15,6 @@ import java.util.List;
 @Component
 public class DockerDeployStep extends AbstractPipelineStep {
 
-    private static final String CONTAINER_PORT = "8089";
-    private static final String APPLICATION_PORT = "8080";
-
     @Override
     public String getName() {
         return "Docker Deploy";
@@ -50,9 +47,9 @@ public class DockerDeployStep extends AbstractPipelineStep {
             log.info("Aucun container existant nomme '{}', verification du port...", containerName);
         }
 
-        String portInUse = findContainerUsingPort(context.getDeploymentPort());
+        String portInUse = findContainerUsingPort(context.getApplicationHostPort());
         if (portInUse != null && !portInUse.equals(containerName)) {
-            log.info("Port {} deja utilise par le container '{}', nettoyage...", context.getDeploymentPort(), portInUse);
+            log.info("Port {} deja utilise par le container '{}', nettoyage...", context.getApplicationHostPort(), portInUse);
             commands.add(new String[]{"docker", "stop", portInUse});
             commands.add(new String[]{"docker", "rm", portInUse});
         }
@@ -61,7 +58,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
             "docker", "run",
             "-d",
             "--name", containerName,
-            "-p", CONTAINER_PORT + ":" + APPLICATION_PORT,
+            "-p", context.getApplicationHostPort() + ":" + context.getApplicationPort(),
             imageName
         };
         commands.add(runCommand);
@@ -86,11 +83,13 @@ public class DockerDeployStep extends AbstractPipelineStep {
         String imageTarFile = context.getWorkspaceDir() + context.getPipelineId() + ".tar";
         commands.add(new String[]{"docker", "save", "-o", imageTarFile, imageName});
 
+        String sshPort = Integer.toString(context.getDeploymentPort());
+
         String[] scpCommand;
         if (context.getSshKeyPath() != null) {
             scpCommand = new String[]{
                 "scp",
-                "-P", context.getDeploymentPort(),
+                "-P", sshPort,
                 "-i", context.getSshKeyPath(),
                 "-o", "StrictHostKeyChecking=no",
                 imageTarFile,
@@ -99,7 +98,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         } else {
             scpCommand = new String[]{
                 "scp",
-                "-P", context.getDeploymentPort(),
+                "-P", sshPort,
                 "-o", "StrictHostKeyChecking=no",
                 imageTarFile,
                 sshTarget + ":/tmp/"
@@ -117,8 +116,8 @@ public class DockerDeployStep extends AbstractPipelineStep {
             containerName,
             containerName,
             containerName,
-            CONTAINER_PORT,
-            APPLICATION_PORT,
+            context.getApplicationHostPort(),
+            context.getApplicationPort(),
             imageName,
             context.getPipelineId()
         );
@@ -127,7 +126,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         if (context.getSshKeyPath() != null) {
             sshCommand = new String[]{
                 "ssh",
-                "-p", context.getDeploymentPort(),
+                "-p", sshPort,
                 "-i", context.getSshKeyPath(),
                 "-o", "StrictHostKeyChecking=no",
                 sshTarget,
@@ -136,7 +135,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         } else {
             sshCommand = new String[]{
                 "ssh",
-                "-p", context.getDeploymentPort(),
+                "-p", sshPort,
                 "-o", "StrictHostKeyChecking=no",
                 sshTarget,
                 remoteCommands
@@ -176,7 +175,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
         }
     }
 
-    private String findContainerUsingPort(String port) {
+    private String findContainerUsingPort(int port) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(
                 "docker", "ps", "--filter", "publish=" + port, "--format", "{{.Names}}"
@@ -216,7 +215,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
                 "docker", "run",
                 "-d",
                 "--name", containerName,
-                "-p", CONTAINER_PORT + ":" + APPLICATION_PORT,
+                "-p", context.getApplicationHostPort() + ":" + context.getApplicationPort(),
                 previousImage
             };
 
