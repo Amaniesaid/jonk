@@ -10,9 +10,9 @@ jonk:
   sonarqube:
     host-url: "http://host.docker.internal:9000"
     token: "squ_83f76ad0fb3ff1dd13cd5e6ec038b49432fc9909"
-#    token: "sqa_193c7f6448cd4d772deefb2e77a46146c4fb8ddd"
     poll-interval: 2s
     quality-gate-timeout: 5m
+    docker-compose-path: "./docker-dev-env/docker-compose.yml"
 
   keycloak:
     server-url: http://host.docker.internal:8180
