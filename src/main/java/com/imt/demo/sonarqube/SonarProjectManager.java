@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
@@ -73,6 +75,7 @@ public class SonarProjectManager {
             }
 
             var dbf = DocumentBuilderFactory.newInstance();
+            // Security features to prevent XXE attacks
             dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
             dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
@@ -80,18 +83,21 @@ public class SonarProjectManager {
 
             var db = dbf.newDocumentBuilder();
             var doc = db.parse(pomPath.toFile());
-            doc.getDocumentElement().normalize();
+            Element root = doc.getDocumentElement();
+            root.normalize();
 
-            String artifactId = textContentOfFirst(doc.getDocumentElement(), "artifactId");
-            String groupId = textContentOfFirst(doc.getDocumentElement(), "groupId");
+            // 1. Get artifactId (Must be directly under <project>)
+            String artifactId = getChildElementText(root, "artifactId");
 
+            // 2. Get groupId (Directly under <project>)
+            String groupId = getChildElementText(root, "groupId");
+
+            // 3. Fallback: If groupId is missing, check inside the <parent> tag
             if (groupId == null || groupId.isBlank()) {
-                var parentNodes = doc.getDocumentElement().getElementsByTagName("parent");
+                NodeList parentNodes = root.getElementsByTagName("parent");
                 if (parentNodes.getLength() > 0) {
-                    var parent = parentNodes.item(0);
-                    if (parent instanceof Element el) {
-                        groupId = textContentOfFirst(el, "groupId");
-                    }
+                    Element parent = (Element) parentNodes.item(0);
+                    groupId = getChildElementText(parent, "groupId");
                 }
             }
 
@@ -104,6 +110,21 @@ public class SonarProjectManager {
             log.debug("Impossible de lire pom.xml pour projectKey: {}", e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /**
+     * Safely retrieves the text content of a direct child element.
+     * This prevents picking up nested tags like <parent><artifactId>.
+     */
+    private String getChildElementText(Element parent, String tagName) {
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(tagName)) {
+                return node.getTextContent();
+            }
+        }
+        return null;
     }
 
     private String textContentOfFirst(Element element, String tag) {

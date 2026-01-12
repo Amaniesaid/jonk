@@ -18,7 +18,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://host.docker.internal:8180/realms/Jonk
+          issuer-uri: http://host.docker.internal:8180/realms/Jonk # TODO : changer ça en jonk.local.fr pour dockerisation
           jwk-set-uri: http://host.docker.internal:8180/realms/Jonk/protocol/openid-connect/certs
   # ============================================
   # Thread Pool Configuration
