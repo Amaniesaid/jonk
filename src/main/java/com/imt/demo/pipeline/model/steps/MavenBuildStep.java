@@ -18,7 +18,7 @@ public class MavenBuildStep extends AbstractPipelineStep {
     @Override
     public StepResult execute(PipelineContext context) throws Exception {
         String[] command = {
-            "mvn", "clean", "package",
+            getMavenCommand(), "clean", "package",
             "-DskipTests",
             "-B"
         };
@@ -33,4 +33,13 @@ public class MavenBuildStep extends AbstractPipelineStep {
 
         return result;
     }
+
+    public static String getMavenCommand() {
+        String osName = System.getProperty("os.name");
+        if (osName != null && osName.startsWith("Windows")) {
+            return "mvn.cmd";
+        }
+        return "mvn";
+    }
+
 }

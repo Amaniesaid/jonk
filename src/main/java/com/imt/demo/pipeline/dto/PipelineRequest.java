@@ -31,7 +31,7 @@ public class PipelineRequest {
 
     private String deploymentHost;
     private String deploymentUser;
-    private String deploymentPort;
+    private int deploymentPort;
     private String sshKeyPath;
 
     private Map<String, String> environmentVariables;

@@ -15,13 +15,11 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractPipelineStep implements PipelineStep {
 
+    private StepResult stepResult;
+
     protected StepResult executeCommand(String[] command, String workingDirectory,
                                         Map<String, String> environmentVariables) {
-        StepResult result = StepResult.builder()
-                .stepName(getName())
-                .status(StepStatus.RUNNING)
-                .startTime(LocalDateTime.now())
-                .build();
+        StepResult result = getInitialStepResult();
 
         try {
             log.info("Execution de la commande: {}", String.join(" ", command));
@@ -78,17 +76,26 @@ public abstract class AbstractPipelineStep implements PipelineStep {
         return result;
     }
 
+    @Override
+    public StepResult getInitialStepResult() {
+        if (stepResult == null) {
+            stepResult = StepResult.builder()
+                    .stepName(getName())
+                    .status(StepStatus.RUNNING)
+                    .startTime(LocalDateTime.now())
+                    .build();
+        }
+
+        return stepResult;
+    }
+
     protected StepResult executeCommand(String[] command, String workingDirectory) {
         return executeCommand(command, workingDirectory, null);
     }
 
     protected StepResult executeCommands(List<String[]> commands, String workingDirectory,
                                          Map<String, String> environmentVariables) {
-        StepResult result = StepResult.builder()
-                .stepName(getName())
-                .status(StepStatus.RUNNING)
-                .startTime(LocalDateTime.now())
-                .build();
+        StepResult result = getInitialStepResult();
 
         for (String[] command : commands) {
             StepResult commandResult = executeCommand(command, workingDirectory, environmentVariables);

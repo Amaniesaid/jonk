@@ -7,6 +7,8 @@ public interface PipelineStep {
 
     String getName();
 
+    StepResult getInitialStepResult();
+
     StepResult execute(PipelineContext context) throws Exception;
 
     void rollback(PipelineContext context) throws Exception;

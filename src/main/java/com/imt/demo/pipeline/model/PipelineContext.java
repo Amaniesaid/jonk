@@ -46,7 +46,6 @@ public class PipelineContext {
     private String deploymentPath;
     private Integer applicationHostPort;
     private Integer applicationPort;
-    private String sshUser;
     private String containerName;
 
     private String pipelineId;

@@ -27,46 +27,6 @@ public class PipelineController {
 
     private final PipelineService pipelineService;
 
-    @PostMapping("/run")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
-    public ResponseEntity<Map<String, String>> runPipeline(@RequestBody PipelineRequest request) {
-        log.info("Requete de declenchement de pipeline recue");
-        log.info("Git URL: {}", request.getGitUrl());
-        log.info("Branche: {}", request.getBranch());
-
-        if (request.getGitUrl() == null || request.getGitUrl().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "L'URL du depot Git est obligatoire"));
-        }
-
-        if (request.getBranch() == null || request.getBranch().isEmpty()) {
-            request.setBranch("main");
-        }
-
-        if (request.getDockerImageName() == null || request.getDockerImageName().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Le nom de l'image Docker est obligatoire"));
-        }
-
-        try {
-            PipelineContext context = buildContextFromRequest(request);
-            String executionId = pipelineService.runPipelineAsync(context).join();
-
-            log.info("Pipeline lance avec succes: {}", executionId);
-
-            Map<String, String> response = new HashMap<>();
-            response.put("executionId", executionId);
-            response.put("message", "Pipeline demarre avec succes");
-            response.put("status", "RUNNING");
-
-            return ResponseEntity.accepted().body(response);
-
-        } catch (Exception e) {
-            log.error("Erreur lors du lancement du pipeline", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Erreur lors du lancement: " + e.getMessage()));
-        }
-    }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV', 'VIEWER')")
@@ -158,27 +118,5 @@ public class PipelineController {
                 "service", "Jonk CI/CD Engine",
                 "version", "1.0.0"
         ));
-    }
-
-    private PipelineContext buildContextFromRequest(PipelineRequest request) {
-        return PipelineContext.builder()
-                .gitUrl(request.getGitUrl())
-                .branch(request.getBranch())
-                .buildTool(request.getBuildTool() != null ? request.getBuildTool() : "maven")
-                .dockerImageName(request.getDockerImageName())
-                .dockerImageTag(request.getDockerImageTag() != null ? request.getDockerImageTag() : "latest-" + System.currentTimeMillis())
-                .dockerRegistry(request.getDockerRegistry())
-                .sonarQubeUrl(request.getSonarQubeUrl())
-                .sonarQubeToken(request.getSonarQubeToken())
-                .sonarProjectKey(request.getSonarProjectKey())
-                .sonarEnabled(Boolean.TRUE.equals(request.getSonarEnabled()))
-                .deploymentHost(request.getDeploymentHost())
-                .deploymentUser(request.getDeploymentUser())
-                .deploymentPort(request.getDeploymentPort())
-                .sshUser(request.getDeploymentUser())
-                .sshKeyPath(request.getSshKeyPath())
-                .environmentVariables(request.getEnvironmentVariables() != null ? request.getEnvironmentVariables() : new HashMap<>())
-                .triggeredBy(request.getTriggeredBy() != null ? request.getTriggeredBy() : "anonymous")
-                .build();
     }
 }

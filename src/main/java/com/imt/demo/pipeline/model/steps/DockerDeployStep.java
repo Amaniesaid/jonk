@@ -29,7 +29,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
 
         context.setContainerName(containerName);
 
-        if (context.getDeploymentHost() != null && context.getSshUser() != null) {
+        if (context.getDeploymentHost() != null && context.getDeploymentUser() != null) {
             return deployRemote(context, fullImageName, containerName);
         } else {
             return deployLocal(context, fullImageName, containerName);
@@ -76,7 +76,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
     }
 
     private StepResult deployRemote(PipelineContext context, String imageName, String containerName) {
-        String sshTarget = context.getSshUser() + "@" + context.getDeploymentHost();
+        String sshTarget = context.getDeploymentUser() + "@" + context.getDeploymentHost();
 
         List<String[]> commands = new ArrayList<>();
 

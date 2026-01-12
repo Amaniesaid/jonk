@@ -50,4 +50,8 @@ public class PipelineExecution {
             this.durationMs = Duration.between(startTime, endTime).toMillis();
         }
     }
+
+    public void replaceLastStepResult(StepResult stepResult) {
+        this.steps.set(this.steps.size() - 1, stepResult);
+    }
 }

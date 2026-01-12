@@ -3,6 +3,7 @@ package com.imt.demo.project.service;
 import com.imt.demo.pipeline.dto.PipelineResponse;
 import com.imt.demo.pipeline.model.PipelineContext;
 import com.imt.demo.pipeline.model.PipelineExecution;
+import com.imt.demo.pipeline.model.PipelineStatus;
 import com.imt.demo.pipeline.repository.PipelineExecutionRepository;
 import com.imt.demo.pipeline.service.PipelineService;
 import com.imt.demo.project.dto.ProjectDto;
@@ -20,16 +21,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ProjectService {
+    private static final String NO_SUCH_PROJECT = "No such project ";
     private final PipelineExecutionRepository pipelineExecutionRepository;
     private final PipelineService pipelineService;
     private final ProjectRepository projectRepository;
@@ -38,19 +41,12 @@ public class ProjectService {
     public List<ProjectSnippetDto> getProjects() {
         return projectRepository.findAll().stream()
                 .map(projectMapper::toSnippetDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    public ProjectSnippetDto getProject(UUID id) {
+    public ProjectDto getProject(UUID id) {
         Project project = projectRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("No such project " + id)
-        );
-        return projectMapper.toSnippetDto(project);
-    }
-
-    public ProjectDto getSensitiveProjectData(UUID id) {
-        Project project = projectRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("No such project " + id)
+                new NotFoundException(NO_SUCH_PROJECT + id)
         );
         return projectMapper.toDto(project);
     }
@@ -63,8 +59,17 @@ public class ProjectService {
 
     public ResponseEntity<Map<String, String>> runPipeline(UUID id, String userTrigger) {
         Project project = projectRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("No such project " + id)
+                new NotFoundException(NO_SUCH_PROJECT + id)
         );
+
+        List<PipelineExecution> runningPipelines = pipelineExecutionRepository.findByGitRepoUrlAndStatusIn(
+                project.getGiturl(),
+                Arrays.asList(PipelineStatus.PENDING, PipelineStatus.RUNNING)
+        );
+
+        if (!runningPipelines.isEmpty()) {
+            throw new BadRequestException("A pipeline is already running for this project.");
+        }
 
         Machine prodMachine = project.getMachines().getFirst();
 
@@ -85,33 +90,33 @@ public class ProjectService {
                 .triggeredBy(userTrigger)
                 .build();
 
-        try {
-            String executionId = pipelineService.runPipelineAsync(context).join();
+        CompletableFuture<String> executionFuture = pipelineService.runPipelineAsync(context);
 
-            log.info("Pipeline lance avec succes: {}", executionId);
+        executionFuture.handle((executionId, ex) -> {
+            if (ex != null) {
+                log.error("Erreur lors du lancement du pipeline", ex);
+            } else {
+                log.info("Pipeline lance avec succes: {}", executionId);
+            }
+            return null;
+        });
 
-            Map<String, String> response = new HashMap<>();
-            response.put("executionId", executionId);
-            response.put("message", "Pipeline demarre avec succes");
-            response.put("status", "RUNNING");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Pipeline demarre avec succes");
+        response.put("status", "PENDING");
 
-            return ResponseEntity.accepted().body(response);
-        } catch (Exception e) {
-            log.error("Erreur lors du lancement du pipeline", e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Erreur lors du lancement: " + e.getMessage()));
-        }
+        return ResponseEntity.accepted().body(response);
     }
 
     public List<PipelineResponse> getPipelineHistory(UUID id) {
         Project project = projectRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("No such project " + id)
+                new NotFoundException(NO_SUCH_PROJECT + id)
         );
 
         List<PipelineExecution> executions = pipelineExecutionRepository.findByGitRepoUrl(project.getGiturl());
         return executions.stream()
                 .map(exec -> PipelineResponse.fromExecution(exec, false))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public PipelineResponse getPipelineStatus(String pipelineId) {

@@ -4,7 +4,6 @@ import com.imt.demo.pipeline.model.PipelineContext;
 import com.imt.demo.pipeline.model.PipelineExecution;
 import com.imt.demo.pipeline.model.PipelineStatus;
 import com.imt.demo.pipeline.model.StepResult;
-import com.imt.demo.pipeline.model.engine.PipelineEngine;
 import com.imt.demo.pipeline.repository.PipelineExecutionRepository;
 import com.imt.demo.pipeline.model.steps.PipelineStep;
 import com.imt.demo.pipeline.model.steps.GitCloneStep;
@@ -79,7 +78,7 @@ public class PipelineService {
         List<PipelineStep> steps = buildPipelineSteps(context);
 
         try {
-            PipelineExecution result = pipelineEngine.executePipeline(context, steps);
+            PipelineExecution result = pipelineEngine.executePipeline(execution, context, steps);
 
             execution.setStatus(result.getStatus());
             execution.setSteps(result.getSteps());
@@ -102,21 +101,6 @@ public class PipelineService {
         }
 
         return CompletableFuture.completedFuture(executionId);
-    }
-
-    public PipelineExecution runPipelineSync(PipelineContext context) {
-        String executionId = UUID.randomUUID().toString();
-        context.setExecutionId(executionId);
-        context.setPipelineId(executionId);
-
-        pipelineEngine.validateContext(context);
-
-        List<PipelineStep> steps = buildPipelineSteps(context);
-
-        PipelineExecution execution = pipelineEngine.executePipeline(context, steps);
-        execution.setId(executionId);
-
-        return executionRepository.save(execution);
     }
 
     private List<PipelineStep> buildPipelineSteps(PipelineContext context) {

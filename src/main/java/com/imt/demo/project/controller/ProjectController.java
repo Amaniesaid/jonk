@@ -36,14 +36,8 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEV')")
-    public ProjectSnippetDto getProject(@PathVariable UUID id) {
+    public ProjectDto getProject(@PathVariable UUID id) {
         return projectService.getProject(id);
-    }
-
-    @GetMapping("/{id}/sensitive")
-    @PreAuthorize("hasAnyRole('ADMIN')")
-    public ProjectDto getSensitiveProjectData(@PathVariable UUID id) {
-        return projectService.getSensitiveProjectData(id);
     }
 
     @PostMapping

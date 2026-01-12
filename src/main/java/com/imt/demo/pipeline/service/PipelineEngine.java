@@ -1,4 +1,4 @@
-package com.imt.demo.pipeline.model.engine;
+package com.imt.demo.pipeline.service;
 
 import com.imt.demo.pipeline.model.PipelineContext;
 import com.imt.demo.pipeline.model.PipelineExecution;
@@ -6,6 +6,7 @@ import com.imt.demo.pipeline.model.PipelineStatus;
 import com.imt.demo.pipeline.model.StepResult;
 import com.imt.demo.pipeline.model.StepStatus;
 import com.imt.demo.pipeline.model.steps.PipelineStep;
+import com.imt.demo.pipeline.repository.PipelineExecutionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -21,17 +22,16 @@ import java.util.UUID;
 @Component
 public class PipelineEngine {
 
-    public PipelineExecution executePipeline(PipelineContext context, List<PipelineStep> steps) {
-        PipelineExecution execution = PipelineExecution.builder()
-                .id(UUID.randomUUID().toString())
-                .gitRepoUrl(context.getGitUrl())
-                .gitBranch(context.getBranch())
-                .commitHash(context.getCommitHash())
-                .status(PipelineStatus.RUNNING)
-                .startTime(LocalDateTime.now())
-                .triggeredBy(context.getTriggeredBy())
-                .steps(new ArrayList<>())
-                .build();
+    private final PipelineExecutionRepository pipelineExecutionRepository;
+
+    public PipelineEngine(PipelineExecutionRepository pipelineExecutionRepository) {
+        this.pipelineExecutionRepository = pipelineExecutionRepository;
+    }
+
+    public PipelineExecution executePipeline(PipelineExecution execution, PipelineContext context, List<PipelineStep> steps) {
+        execution.setStatus(PipelineStatus.RUNNING);
+
+        pipelineExecutionRepository.save(execution);
 
         log.info("===============================================================");
         log.info("Demarrage du pipeline: {}", execution.getId());
@@ -61,8 +61,14 @@ public class PipelineEngine {
 
             StepResult stepResult;
             try {
+
+                execution.addStepResult(step.getInitialStepResult());
+                pipelineExecutionRepository.save(execution);
+
                 stepResult = step.execute(context);
-                execution.addStepResult(stepResult);
+                execution.replaceLastStepResult(stepResult);
+
+                pipelineExecutionRepository.save(execution);
 
                 if (stepResult.getStatus() == StepStatus.SUCCESS) {
                     log.info("Etape '{}' terminee avec succes en {}ms", step.getName(), stepResult.getDurationMs());
@@ -97,6 +103,8 @@ public class PipelineEngine {
 
         execution.setEndTime(LocalDateTime.now());
         execution.calculateDuration();
+
+        pipelineExecutionRepository.save(execution);
 
         if (pipelineSuccess) {
             execution.setStatus(PipelineStatus.SUCCESS);

@@ -15,6 +15,8 @@ public interface PipelineExecutionRepository extends MongoRepository<PipelineExe
 
     List<PipelineExecution> findByGitRepoUrl(String gitRepoUrl);
 
+    List<PipelineExecution> findByGitRepoUrlAndStatusIn(String gitRepoUrl, List<PipelineStatus> statuses);
+
     List<PipelineExecution> findByGitRepoUrlAndGitBranch(String gitRepoUrl, String gitBranch);
 
     List<PipelineExecution> findByTriggeredBy(String triggeredBy);
