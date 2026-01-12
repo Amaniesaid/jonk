@@ -16,17 +16,12 @@ public class SonarQubeProperties {
     /**
      * DEV: URL fixe (ex: http://localhost:9000)
      */
-    private String hostUrl = "http://localhost:9000";
+    private String hostUrl = "http://host.docker.internal:9000";
 
     /**
      * DEV: token en dur dans application-dev.yml (facilement remplaçable par un secret manager)
      */
-    private String token = "squ_9559693dc48eac5d244a0b087ffb08f72cdea3d5";
-
-    /**
-     * Commande du SonarScanner CLI (doit être disponible dans l'environnement)
-     */
-    private String scannerCommand = "sonar-scanner";
+    private String token;
 
     /**
      * Polling qualité: intervalle entre requêtes.

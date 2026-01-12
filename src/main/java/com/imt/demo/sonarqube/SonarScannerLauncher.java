@@ -28,36 +28,44 @@ public class SonarScannerLauncher {
     }
 
     public ScanExecutionResult launch(ScanRequest request, Consumer<String> logLineConsumer) {
-        String scanner = properties.getScannerCommand();
-        if (scanner == null || scanner.isBlank()) {
-            throw new IllegalStateException("SonarScanner command is not configured");
+        String sonarToken = properties.getToken();
+        if (sonarToken == null || sonarToken.isBlank()) {
+            throw new IllegalStateException("Sonar token is not configured");
         }
         if (request.getWorkspaceDir() == null || !request.getWorkspaceDir().exists()) {
             throw new IllegalArgumentException("Workspace directory is missing");
         }
 
-        List<String> command = new ArrayList<>();
-        command.add(scanner);
-        command.add("-Dsonar.host.url=" + request.getHostUrl());
-        command.add("-Dsonar.login=" + request.getToken());
-        command.add("-Dsonar.projectKey=" + request.getProjectKey());
-        command.add("-Dsonar.projectName=" + request.getProjectName());
+        StringBuilder sonarParams = new StringBuilder();
+        sonarParams.append("-Dsonar.host.url=").append(request.getHostUrl());
+        sonarParams.append(" -Dsonar.login=").append(request.getToken());
+        sonarParams.append(" -Dsonar.projectKey=").append(request.getProjectKey());
+        sonarParams.append(" -Dsonar.projectName=").append(request.getProjectName());
 
         if (request.getProjectVersion() != null && !request.getProjectVersion().isBlank()) {
-            command.add("-Dsonar.projectVersion=" + request.getProjectVersion());
+            sonarParams.append(" -Dsonar.projectVersion=").append(request.getProjectVersion());
         }
 
         Path targetClasses = request.getWorkspaceDir().toPath().resolve("target/classes");
         if (Files.exists(targetClasses)) {
-            command.add("-Dsonar.java.binaries=target/classes");
+            sonarParams.append(" -Dsonar.java.binaries=target/classes");
         }
 
         Path sourcesDir = request.getWorkspaceDir().toPath().resolve("src");
         if (Files.exists(sourcesDir)) {
-            command.add("-Dsonar.sources=src");
+            sonarParams.append(" -Dsonar.sources=src");
         }
 
-        command.add("-Dsonar.projectBaseDir=" + request.getWorkspaceDir().getAbsolutePath());
+        sonarParams.append(" -Dsonar.projectBaseDir=").append(request.getWorkspaceDir().getAbsolutePath());
+
+        List<String> command = new ArrayList<>(
+                List.of("docker",
+                        "compose",
+                        "run",
+                        "--rm",
+                        "sonarscanner",
+                        "sonar-sonarToken",
+                        "\"" + sonarParams + "\""));
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(request.getWorkspaceDir());

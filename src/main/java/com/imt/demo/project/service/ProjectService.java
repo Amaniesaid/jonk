@@ -88,6 +88,7 @@ public class ProjectService {
                 .applicationHostPort(prodMachine.getDeploymentPort())
                 .containerName(project.getDockerImageName() + project.getId().toString())
                 .environmentVariables(new HashMap<>())
+                .sonarEnabled(true)
                 .triggeredBy(userTrigger)
                 .build();
 

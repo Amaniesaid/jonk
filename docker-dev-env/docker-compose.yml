@@ -126,15 +126,13 @@ services:
 
   sonarscanner:
     image: sonarsource/sonar-scanner-cli
-    container_name: sonarscanner
+    container_name: jonk-scanner
     environment:
       - SONAR_HOST_URL=http://sonarqube:9000
-      - SONAR_LOGIN=${SONAR_TOKEN}  # Le token d'authentification SonarQube
+      - SONAR_LOGIN=${SONAR_TOKEN}
 
-#    entrypoint: ["sonar-scanner", "-Dsonar.projectKey=my-project", "-Dsonar.sources=."]
     depends_on:
       - sonarqube
-    restart: "no"  # Ne pas redémarrer automatiquement le scanner
 
 volumes:
   postgres_data:
