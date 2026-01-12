@@ -17,7 +17,7 @@ public class MavenTestStep extends AbstractPipelineStep {
     @Override
     public StepResult execute(PipelineContext context) throws Exception {
         String[] command = {
-            "mvn.cmd", "test",
+            "mvn", "test",
             "-B"
         };
 

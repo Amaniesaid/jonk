@@ -18,7 +18,7 @@ public class MavenBuildStep extends AbstractPipelineStep {
     @Override
     public StepResult execute(PipelineContext context) throws Exception {
         String[] command = {
-            "mvn.cmd", "clean", "package",
+            "mvn", "clean", "package",
             "-DskipTests",
             "-B"
         };
