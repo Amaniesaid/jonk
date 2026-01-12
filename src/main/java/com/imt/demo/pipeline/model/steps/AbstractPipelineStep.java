@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractPipelineStep implements PipelineStep {
 
-    private StepResult stepResult;
+    private StepResult initialStepResult;
 
     protected StepResult executeCommand(String[] command, String workingDirectory,
                                         Map<String, String> environmentVariables) {
@@ -78,15 +78,11 @@ public abstract class AbstractPipelineStep implements PipelineStep {
 
     @Override
     public StepResult getInitialStepResult() {
-        if (stepResult == null) {
-            stepResult = StepResult.builder()
-                    .stepName(getName())
-                    .status(StepStatus.RUNNING)
-                    .startTime(LocalDateTime.now())
-                    .build();
-        }
-
-        return stepResult;
+        return StepResult.builder()
+                .stepName(getName())
+                .status(StepStatus.RUNNING)
+                .startTime(LocalDateTime.now())
+                .build();
     }
 
     protected StepResult executeCommand(String[] command, String workingDirectory) {

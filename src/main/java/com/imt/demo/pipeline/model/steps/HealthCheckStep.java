@@ -20,7 +20,6 @@ public class HealthCheckStep extends AbstractPipelineStep {
 
     private static final int MAX_RETRIES = 15;
     private static final int RETRY_DELAY_MS = 4000;
-    private static final int DEFAULT_PORT = 8080;
     private static final String DEFAULT_CHECK_PORT = "8089";
 
     @Override
@@ -37,7 +36,7 @@ public class HealthCheckStep extends AbstractPipelineStep {
                 .build();
 
         String host = context.getDeploymentHost() != null ? context.getDeploymentHost() : "localhost";
-        int port = Integer.parseInt(DEFAULT_CHECK_PORT);
+        int port = context.getApplicationHostPort();
 
         result.addLog(String.format("Verification de l'application sur %s:%d", host, port));
 

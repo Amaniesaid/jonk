@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class DockerDeployStep extends AbstractPipelineStep {
 
         List<String[]> commands = new ArrayList<>();
 
-        String imageTarFile = context.getWorkspaceDir() + context.getPipelineId() + ".tar";
+        String imageTarFile = Path.of(context.getWorkspaceDir(), context.getPipelineId() + ".tar").normalize().toString();
         commands.add(new String[]{"docker", "save", "-o", imageTarFile, imageName});
 
         String sshPort = Integer.toString(context.getDeploymentPort());
